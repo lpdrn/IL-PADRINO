@@ -1,4 +1,4 @@
-import { HERO, CTA } from "@/lib/content";
+import { HERO, BONUS, CTA } from "@/lib/content";
 import { CtaButton } from "./ui/CtaButton";
 import { CountUp } from "./ui/CountUp";
 import { Spade, Check, ChevronDown } from "./ui/Icons";
@@ -41,14 +41,17 @@ export function Hero() {
           <span className="block text-[1.6rem] font-bold leading-tight text-ivory">
             ابدأ بـ
           </span>
-          <span className="my-1 block leading-none">
+          <span className="my-1 flex items-baseline justify-center gap-2 leading-none">
             <CountUp
               end={2000}
               className="text-foil text-[4.1rem] font-black tracking-tight"
             />
+            <span className="text-foil text-[1.6rem] font-bold">
+              {BONUS.currency}
+            </span>
           </span>
           <span className="block text-[1.6rem] font-bold leading-tight text-ivory">
-            درهم في محفظتك
+            في محفظتك
           </span>
         </h1>
 

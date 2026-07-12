@@ -1,10 +1,8 @@
 import { TopBar } from "@/components/TopBar";
 import { Hero } from "@/components/Hero";
-import { BonusCard } from "@/components/BonusCard";
 import { PromoCode } from "@/components/PromoCode";
 import { RegistrationBand } from "@/components/RegistrationBand";
 import { AppButtons } from "@/components/AppButtons";
-import { Telegram } from "@/components/Telegram";
 import { Trust } from "@/components/Trust";
 import { Faq } from "@/components/Faq";
 import { FinalCta } from "@/components/FinalCta";
@@ -22,13 +20,11 @@ export default function Home() {
       <main>
         <Hero />
         <AppButtons />
-        <BonusCard />
         <PromoCode />
         <RegistrationBand />
         <Trust />
         <Faq />
         <FinalCta />
-        <Telegram />
       </main>
       <Footer />
       <StickyCta />

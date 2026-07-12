@@ -2,9 +2,9 @@
 
 import { useEffect, useState, type ReactNode } from "react";
 import { LINKS } from "@/lib/config";
-import { APPS } from "@/lib/content";
+import { APPS, TELEGRAM } from "@/lib/content";
 import { Reveal } from "./ui/Reveal";
-import { Android, Apple, ArrowLeft } from "./ui/Icons";
+import { Android, Apple, ArrowLeft, Telegram as TelegramIcon } from "./ui/Icons";
 
 function AppButton({
   href,
@@ -12,12 +12,15 @@ function AppButton({
   label,
   sub,
   recommended,
+  accentClassName = "border-hairline text-gold",
 }: {
   href: string;
   icon: ReactNode;
   label: string;
   sub: string;
   recommended: boolean;
+  /** Icon-circle border + icon color classes; defaults to the gold accent. */
+  accentClassName?: string;
 }) {
   return (
     <a
@@ -26,7 +29,9 @@ function AppButton({
       rel="noopener nofollow sponsored"
       className={`btn-outline ${recommended ? "!border-hairline-strong" : ""}`}
     >
-      <span className="grid size-9 flex-none place-items-center rounded-full border border-hairline bg-ink text-gold">
+      <span
+        className={`grid size-9 flex-none place-items-center rounded-full border bg-ink ${accentClassName}`}
+      >
         {icon}
       </span>
       <span className="flex-1 text-start">
@@ -46,8 +51,11 @@ function AppButton({
 }
 
 /**
- * Secondary (Tier 2) download route. Both apps always available; the visitor's
- * OS is surfaced first and flagged, but never competes with the primary CTA.
+ * Secondary (Tier 2) download route + the Telegram channel, grouped in one
+ * tight list so all three feel like one family of buttons. Both apps always
+ * available; the visitor's OS is surfaced first and flagged, but never
+ * competes with the primary CTA. Telegram keeps its own brand-blue icon
+ * accent so the channel reads as recognizably Telegram.
  */
 export function AppButtons() {
   const [os, setOs] = useState<"ios" | "android" | null>(null);
@@ -78,6 +86,17 @@ export function AppButtons() {
       recommended={os === "ios"}
     />
   );
+  const telegram = (
+    <AppButton
+      key="telegram"
+      href={LINKS.telegram}
+      icon={<TelegramIcon className="size-5" />}
+      label={TELEGRAM.label}
+      sub={TELEGRAM.sub}
+      recommended={false}
+      accentClassName="border-[#2AABEE]/45 text-[#2AABEE]"
+    />
+  );
 
   const ordered = os === "ios" ? [iphone, android] : [android, iphone];
 
@@ -88,7 +107,10 @@ export function AppButtons() {
           <h2 className="mb-5 text-center font-display text-[1.35rem] text-ivory">
             {APPS.heading}
           </h2>
-          <div className="flex flex-col gap-3">{ordered}</div>
+          <div className="flex flex-col gap-3">
+            {ordered}
+            {telegram}
+          </div>
         </Reveal>
       </div>
     </section>
