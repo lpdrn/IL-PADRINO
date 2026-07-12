@@ -1,36 +1,60 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# IL PADRINO — Landing Page
 
-## Getting Started
+Production landing page for the **IL PADRINO** affiliate betting brand. Arabic
+(RTL), luxury black & gold, mobile-first, engineered to maximize qualified
+First-Time Depositors (FTD) from Meta Ads traffic.
 
-First, run the development server:
+## Stack
+
+- **Next.js 15** (App Router, React Server Components) · **React 19**
+- **TypeScript** (strict) · **Tailwind CSS v4** (CSS-first `@theme`)
+- Fonts: **Noto Kufi Arabic** (display) + **IBM Plex Sans Arabic** (body), via `next/font`
+- Zero image assets — every visual is CSS (gradients, pseudo-elements, one SVG grain)
+
+## Commands
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm run dev        # start dev server (http://localhost:3000)
+npm run build      # production build
+npm run start      # serve the production build
+npm run lint       # ESLint (flat config, next/core-web-vitals + typescript)
+npm run typecheck  # tsc --noEmit
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Where things live
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+| What | File |
+| --- | --- |
+| External links + promo code | `lib/config.ts` |
+| All Arabic copy | `lib/content.ts` |
+| Design tokens & signature styles | `app/globals.css` |
+| Fonts, SEO metadata, RTL shell | `app/layout.tsx` |
+| Page composition | `app/page.tsx` |
+| Section components | `components/` |
+| Reusable primitives (CTA, CountUp, Reveal, Icons) | `components/ui/` |
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Editing content
 
-## Learn More
+- **Promo code / links:** edit `lib/config.ts` (`PROMO_CODE`, `LINKS`). The
+  registration link already carries the `SBA3` sub-id in its path.
+- **Copy:** edit `lib/content.ts`. The primary CTA string is fixed by the brief.
+- **Colors / fonts:** edit the `@theme` block in `app/globals.css` and the font
+  config in `app/layout.tsx`.
 
-To learn more about Next.js, take a look at the following resources:
+## Before going live
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+1. Replace the placeholder domain `https://il-padrino.com` in `app/layout.tsx`
+   (`metadataBase`), `app/robots.ts`, `app/sitemap.ts`, and
+   `components/StructuredData.tsx` with the real production domain.
+2. Add your **Meta Pixel + Conversions API** for the registration/deposit
+   events. Incoming Meta campaign params (`fbclid`, `utm_*`, sub-ids) are already
+   forwarded onto every outbound link by `components/LinkEnhancer.tsx`.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Conversion & compliance notes
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Single primary CTA (gold foil) repeated across the page + a sticky mobile bar.
+  App downloads are Tier-2, Telegram is Tier-3 — none competes with registration.
+- App buttons are OS-detected (Android/iPhone surfaced first for the visitor's device).
+- Copy-to-clipboard has an in-app-webview fallback (Meta traffic runs inside the
+  FB/IG browser).
+- 18+ / responsible-gambling messaging is present in the top bar and footer.

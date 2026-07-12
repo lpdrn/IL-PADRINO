@@ -1,26 +1,406 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* ============================================================
+   IL PADRINO — Design System (Mafia Noir Luxury / Black & Gold)
+   Mobile-first · RTL · fast · CSS-only decoration (no imagery)
+   ============================================================ */
+
+@theme {
+  /* Backgrounds — obsidian stack */
+  --color-ink: #0a0a0b; /* page canvas */
+  --color-panel: #141416; /* cards / panels */
+  --color-chip: #1c1c1f; /* chips, code, inputs */
+  --color-hover: #232327; /* pressed / hover surface */
+
+  /* Gold foil system */
+  --color-gold: #d4af37; /* primary metallic gold */
+  --color-gold-hi: #f4e5a3; /* champagne highlight / sheen */
+  --color-gold-mid: #b8912b; /* mid foil stop */
+  --color-gold-deep: #8a6d1f; /* deep foil shadow */
+
+  /* Text */
+  --color-ivory: #f5f1e6; /* primary text — 17.8:1 on ink (AAA) */
+  --color-muted: #a39f94; /* secondary text — 7.1:1 on ink (AA) */
+
+  /* Semantic */
+  --color-success: #4e9f6d; /* payout / verified */
+
+  /* Borders */
+  --color-hairline: rgba(212, 175, 55, 0.22);
+  --color-hairline-strong: rgba(212, 175, 55, 0.45);
+  --color-line: rgba(245, 241, 230, 0.08);
+
+  /* Fonts (next/font injects the variables on <html>) */
+  --font-display: var(--font-kufi);
+  --font-body: var(--font-plex);
+
+  /* Radii */
+  --radius-card: 16px;
+  --radius-btn: 12px;
+  --radius-chip: 10px;
+
+  /* Motion */
+  --ease-lux: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
+/* ------------------------------------------------------------ */
+/*  Base                                                         */
+/* ------------------------------------------------------------ */
+@layer base {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    color-scheme: dark;
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: var(--color-ink);
+    /* Obsidian spotlight vignette from the top (behind the hero) */
+    background-image: radial-gradient(
+      120% 80% at 50% -8%,
+      #16161a 0%,
+      #0a0a0b 58%
+    );
+    background-repeat: no-repeat;
+    color: var(--color-ivory);
+    font-family: var(--font-body), system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-display), system-ui, sans-serif;
+    font-weight: 900;
+    line-height: 1.18;
+    text-wrap: balance;
+  }
+
+  /* Latin numerals / codes read as a ledger, isolated inside RTL */
+  .num {
+    font-variant-numeric: tabular-nums;
+    unicode-bidi: isolate;
+    direction: ltr;
+  }
+
+  /* Accessible keyboard focus — real outline (a component box-shadow can't
+     clobber it, and an element's own overflow:hidden can't clip its outline). */
+  :where(a, button, summary, [tabindex]):focus-visible {
+    outline: 3px solid rgba(212, 175, 55, 0.9);
+    outline-offset: 2px;
+  }
+  /* FAQ <summary> lives inside an overflow-hidden panel that would clip an
+     outset ring on its side edges — draw this one inset instead. */
+  summary:focus-visible {
+    outline: none;
+    box-shadow: inset 0 0 0 3px rgba(212, 175, 55, 0.6);
+  }
+
+  ::selection {
+    background: rgba(212, 175, 55, 0.28);
+    color: #fff;
+  }
+
+  /* Respect reduced-motion everywhere */
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.001ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.001ms !important;
+    }
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* ------------------------------------------------------------ */
+/*  Signature components / utilities                             */
+/* ------------------------------------------------------------ */
+@layer components {
+  /* Section rhythm */
+  .section {
+    padding-inline: 20px;
+    padding-block: 44px;
+  }
+  .shell {
+    width: 100%;
+    max-width: 34rem; /* keep the "premium narrow" feel even on desktop */
+    margin-inline: auto;
+  }
+
+  /* Card surface with the premium low-alpha gold hairline */
+  .panel {
+    background-color: var(--color-panel);
+    border: 1px solid var(--color-hairline);
+    border-radius: var(--radius-card);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+  }
+
+  /* Engraved L-shaped corner brackets (VIP-certificate framing) */
+  .corner-ticks {
+    position: relative;
+  }
+  .corner-ticks::before,
+  .corner-ticks::after {
+    content: "";
+    position: absolute;
+    width: 14px;
+    height: 14px;
+    border: 1.5px solid var(--color-hairline-strong);
+    pointer-events: none;
+  }
+  .corner-ticks::before {
+    inset-block-start: 9px;
+    inset-inline-start: 9px;
+    border-inline-end: 0;
+    border-block-end: 0;
+    border-start-start-radius: 6px;
+  }
+  .corner-ticks::after {
+    inset-block-end: 9px;
+    inset-inline-end: 9px;
+    border-inline-start: 0;
+    border-block-start: 0;
+    border-end-end-radius: 6px;
+  }
+
+  /* Gold-foil surface (CTA / crest / coins) — stamped, never flat */
+  .foil {
+    background-image: linear-gradient(
+      180deg,
+      #f4e5a3 0%,
+      #d4af37 45%,
+      #b8912b 72%,
+      #8a6d1f 100%
+    );
+    color: #0a0a0b;
+    box-shadow:
+      inset 0 1px 0 rgba(244, 229, 163, 0.6),
+      inset 0 -2px 4px rgba(0, 0, 0, 0.35),
+      0 6px 20px rgba(212, 175, 55, 0.18);
+  }
+
+  /* Gold text via background-clip (headline accent + amounts) */
+  .text-foil {
+    background-image: linear-gradient(
+      92deg,
+      #8a6d1f 0%,
+      #f4e5a3 50%,
+      #d4af37 100%
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  /* Primary CTA — gold foil + travelling champagne sheen */
+  .cta {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    width: 100%;
+    min-height: 56px;
+    padding-inline: 20px;
+    border-radius: var(--radius-btn);
+    font-family: var(--font-body), sans-serif;
+    font-weight: 600;
+    font-size: 1.0625rem;
+    line-height: 1.2;
+    letter-spacing: -0.01em;
+    overflow: hidden;
+    isolation: isolate;
+    transition:
+      transform 0.12s var(--ease-lux),
+      box-shadow 0.2s var(--ease-lux);
+  }
+  .cta > * {
+    position: relative;
+    z-index: 3;
+  }
+  .cta::after {
+    content: "";
+    position: absolute;
+    inset-block: 0;
+    inset-inline-start: -60%;
+    width: 45%;
+    background: linear-gradient(
+      100deg,
+      transparent,
+      rgba(255, 255, 255, 0.55),
+      transparent
+    );
+    transform: skewX(-18deg);
+    z-index: 2;
+    pointer-events: none;
+  }
+  .cta:active {
+    transform: scale(0.98);
+  }
+
+  /* Secondary / tertiary buttons (apps, telegram) */
+  .btn-outline {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    width: 100%;
+    min-height: 54px;
+    padding-inline: 18px;
+    border-radius: var(--radius-btn);
+    background-color: var(--color-chip);
+    border: 1px solid var(--color-hairline);
+    color: var(--color-ivory);
+    font-weight: 600;
+    transition:
+      border-color 0.2s var(--ease-lux),
+      background-color 0.2s var(--ease-lux),
+      transform 0.12s var(--ease-lux);
+  }
+  .btn-outline:active {
+    transform: scale(0.985);
+  }
+  @media (hover: hover) {
+    .btn-outline:hover {
+      border-color: var(--color-hairline-strong);
+      background-color: var(--color-hover);
+    }
+  }
+
+  /* Code chip — minted, with a faint diagonal monogram watermark */
+  .code-chip {
+    position: relative;
+    background-color: var(--color-chip);
+    background-image: repeating-linear-gradient(
+      -45deg,
+      rgba(212, 175, 55, 0.05) 0 2px,
+      transparent 2px 22px
+    );
+    border: 1px solid var(--color-hairline);
+    border-radius: var(--radius-chip);
+    box-shadow:
+      inset 0 1px 0 rgba(244, 229, 163, 0.08),
+      inset 0 -6px 14px rgba(0, 0, 0, 0.4);
+  }
+
+  /* Minted coin trust badge */
+  .coin {
+    display: grid;
+    place-items: center;
+    width: 46px;
+    height: 46px;
+    border-radius: 9999px;
+    background-image: linear-gradient(180deg, #f4e5a3, #d4af37 55%, #8a6d1f);
+    box-shadow:
+      inset 0 0 0 1.5px rgba(255, 255, 255, 0.28),
+      inset 0 -3px 6px rgba(0, 0, 0, 0.35),
+      0 4px 12px rgba(0, 0, 0, 0.45);
+    color: #0a0a0b;
+    flex: none;
+  }
+
+  /* Scroll-reveal — fade + rise, gated by reduced-motion */
+  .reveal {
+    opacity: 0;
+    transform: translateY(14px);
+    transition:
+      opacity 0.5s var(--ease-lux),
+      transform 0.5s var(--ease-lux);
+  }
+  .reveal.is-visible {
+    opacity: 1;
+    transform: none;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .reveal {
+      opacity: 1;
+      transform: none;
+    }
+  }
+  /* Fallback: never hide content when scripting is unavailable (no-JS). */
+  @media (scripting: none) {
+    .reveal {
+      opacity: 1;
+      transform: none;
+    }
+  }
+}
+
+/* ------------------------------------------------------------ */
+/*  Decorative motion (only when motion is welcome)              */
+/* ------------------------------------------------------------ */
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes sheen {
+    /* Compositor-only transform (RTL: base sits right, sweeps left). The 0%
+       frame equals the base transform, so there's no jump. */
+    0% {
+      transform: translateX(0) skewX(-18deg);
+    }
+    100% {
+      transform: translateX(-490%) skewX(-18deg);
+    }
+  }
+  .cta::after {
+    animation: sheen 6s var(--ease-lux) infinite;
+    animation-delay: 1.4s;
+  }
+
+  @keyframes glow-breathe {
+    0%,
+    100% {
+      opacity: 0.75;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 1;
+      transform: scale(1.06);
+    }
+  }
+  .crest-glow {
+    animation: glow-breathe 8s ease-in-out infinite;
+  }
+
+  @keyframes bob {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(5px);
+    }
+  }
+  .bob {
+    animation: bob 2.4s ease-in-out infinite;
+  }
+
+  @keyframes copied-pulse {
+    0% {
+      box-shadow: 0 0 0 0 rgba(78, 159, 109, 0.55);
+    }
+    100% {
+      box-shadow: 0 0 0 10px rgba(78, 159, 109, 0);
+    }
+  }
+  .copied-pulse {
+    animation: copied-pulse 0.5s ease-out;
+  }
+}
+
+/* Film grain — fixed full-screen, kills flat-CSS cheapness */
+.grain {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  pointer-events: none;
+  opacity: 0.045;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
