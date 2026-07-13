@@ -1,11 +1,11 @@
 import { HERO, BONUS, CTA } from "@/lib/content";
 import { CtaButton } from "./ui/CtaButton";
 import { CountUp } from "./ui/CountUp";
-import { Spade, Check, ChevronDown } from "./ui/Icons";
+import { Spade, Check } from "./ui/Icons";
 
 /**
- * Above-the-fold: crest → eyebrow → headline (with the count-up 2000 as the
- * focal number) → sub-headline → primary CTA → micro-trust row.
+ * Above-the-fold: crest → headline (with the count-up 2000 as the focal
+ * number) → sub-headline → primary CTA → micro-trust row.
  * Delivers instant ad-to-LP message match; the money leads.
  */
 export function Hero() {
@@ -33,13 +33,9 @@ export function Hero() {
           </div>
         </div>
 
-        <p className="mb-3 text-[13px] font-medium tracking-[0.22em] text-muted">
-          {HERO.eyebrow}
-        </p>
-
         <h1 className="mb-4 font-display">
           <span className="block text-[1.6rem] font-bold leading-tight text-ivory">
-            ابدأ بـ
+            {HERO.headlineBefore}
           </span>
           <span className="my-1 flex items-baseline justify-center gap-2 leading-none">
             <CountUp
@@ -51,7 +47,7 @@ export function Hero() {
             </span>
           </span>
           <span className="block text-[1.6rem] font-bold leading-tight text-ivory">
-            في محفظتك
+            {HERO.headlineAfter}
           </span>
         </h1>
 
@@ -72,9 +68,13 @@ export function Hero() {
           ))}
         </ul>
 
-        <ChevronDown
-          className="bob mt-8 size-6 text-gold/50"
+        <div
           aria-hidden="true"
+          className="mt-8 h-px w-12"
+          style={{
+            backgroundImage:
+              "linear-gradient(90deg, transparent, rgba(212,175,55,0.6), transparent)",
+          }}
         />
       </div>
     </section>

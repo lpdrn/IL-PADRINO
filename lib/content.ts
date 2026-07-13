@@ -7,8 +7,8 @@
 import { PROMO_CODE } from "./config";
 
 export const HERO = {
-  eyebrow: "أحسن منصة مراهنات",
-  headline: "ابدأ بـ 2000 درهم في محفظتك",
+  headlineBefore: "بونص ترحيبي",
+  headlineAfter: "ينتظرك",
   subheadline:
     "إيداع آمن، وربح فوري، وسحب بلا انتظار.",
   microTrust: ["سحب فوري", "آمن ومشفّر", "دعم 24/7"],
