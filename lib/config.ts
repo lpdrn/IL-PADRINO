@@ -11,7 +11,8 @@ export const SITE_URL = "https://il-padrino.com" as const;
 
 export const LINKS = {
   /** Primary registration link (carries the promo sub-id in its tracking tag). */
-  register: "https://1xlite-48727.bar/en?tag=d_3622779m_97c_",
+  register:
+    "https://1xlite-48727.bar/en/registration?d_3622779m_97c_SBA3&type=fast&bonus=SPORT&currency=MAD",
   /** Android APK / affiliate tracking link. */
   android: "https://reffpa.com/L?tag=d_3622779m_70865c_&site=3622779&ad=70865",
   /** iOS install-walkthrough video (Telegram post), not a TestFlight link. */
