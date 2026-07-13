@@ -1,7 +1,7 @@
 import { ImageResponse } from "next/og";
 import { PROMO_CODE } from "@/lib/config";
 
-export const alt = `IL PADRINO — 2000 AED first-deposit bonus, promo code ${PROMO_CODE}`;
+export const alt = `IL PADRINO — 2000 MAD first-deposit bonus, promo code ${PROMO_CODE}`;
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -78,7 +78,7 @@ export default function OpengraphImage() {
               marginLeft: 16,
             }}
           >
-            AED
+            MAD
           </div>
         </div>
 

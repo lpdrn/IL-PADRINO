@@ -1,7 +1,8 @@
 /**
  * All Arabic (RTL) copy for the landing page, in one place.
- * Written in natural Gulf-oriented MSA. Latin tokens (2000, SBA3, 18) are
- * rendered inside bidi-isolated <span className="num"> spans in the UI.
+ * Written in natural Moroccan-oriented MSA (audience currency is MAD).
+ * Latin tokens (2000, SBA3, 18) are rendered inside bidi-isolated
+ * <span className="num"> spans in the UI.
  */
 
 import { PROMO_CODE } from "./config";
@@ -67,7 +68,7 @@ export const TRUST = {
     { title: "تشفير يحمي بياناتك", desc: "حماية كاملة لمعلوماتك" },
     { title: "آلاف اللاعبين يثقون بنا", desc: "مجتمع يكبر كل يوم" },
   ],
-  socialProof: "منصة موثوقة يثق بها آلاف اللاعبين في الخليج",
+  socialProof: "منصة موثوقة يثق بها آلاف اللاعبين في المغرب",
 } as const;
 
 export const FAQ = {
@@ -95,7 +96,7 @@ export const FAQ = {
     },
     {
       q: "هل المنصة آمنة وموثوقة؟",
-      a: "منصة مرخّصة ومحمية بأحدث تقنيات التشفير، ويثق بها آلاف اللاعبين في الخليج. أموالك وبياناتك في أمان تام.",
+      a: "منصة مرخّصة ومحمية بأحدث تقنيات التشفير، ويثق بها آلاف اللاعبين في المغرب. أموالك وبياناتك في أمان تام.",
     },
   ],
 } as const;
