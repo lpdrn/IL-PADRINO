@@ -17,8 +17,8 @@ export const LINKS = {
   android: "https://reffpa.com/L?tag=d_3622779m_70865c_&site=3622779&ad=70865",
   /** iOS install-walkthrough video (Telegram post), not a TestFlight link. */
   iphone: "https://t.me/lpdrn/8285",
-  /** Official Telegram channel. */
-  telegram: "https://t.me/lpdrn",
+  /** Official Telegram channel (private invite link). */
+  telegram: "https://t.me/+JTOdPxmvj6g0MzNk",
 } as const;
 
 export const BRAND = {
