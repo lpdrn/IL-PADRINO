@@ -39,6 +39,12 @@ npm run typecheck  # tsc --noEmit
 - **Links / promo code:** edit `lib/config.ts` (`PROMO_CODE`, `LINKS`).
   `LINKS.telegram` is the primary CTA target; `LINKS.register` is kept for
   reference/downstream use but is not linked directly on the page.
+- **Per-campaign Telegram links:** to track each ad campaign's joins
+  separately, create an invite link in Telegram, add it to
+  `TELEGRAM_CAMPAIGNS` in `lib/config.ts` under a short key (e.g.
+  `ig1: "https://t.me/+…"`), and use `https://<site>/?ch=ig1` as that
+  campaign's ad URL — the CTA swaps to the matching link automatically.
+  Unknown keys safely fall back to `LINKS.telegram`.
 - **Copy:** edit `lib/content.ts` — all Arabic strings live there.
 - **Colors / fonts:** edit the `@theme` block in `app/globals.css` and the font
   config in `app/layout.tsx`. The primary CTA uses the `.foil-telegram`

@@ -19,6 +19,24 @@ export const LINKS = {
   telegram: "https://t.me/+JTOdPxmvj6g0MzNk",
 } as const;
 
+/**
+ * Per-campaign Telegram invite links, so each ad campaign's joins show up
+ * separately in Telegram's channel stats.
+ *
+ * Usage: create a new invite link in Telegram (القناة ← إدارة ← روابط الدعوة)،
+ * add a short key for it below, then use https://<site>/?ch=<key> as that
+ * campaign's ad destination URL. The CTA buttons swap to the matching link
+ * automatically; unknown or missing keys fall back to LINKS.telegram.
+ * Keys are a safety whitelist — never put raw invite links in ad URLs.
+ *
+ * Example:
+ *   ig1: "https://t.me/+AbCdEfGh123",
+ */
+export const TELEGRAM_CAMPAIGNS: Record<string, string> = {
+  /** Instagram-only test campaign. */
+  ig1: "https://t.me/+AFMe1DZLmnwwODA8",
+};
+
 export const BRAND = {
   name: "IL PADRINO",
   /** Latin wordmark shown in the header/footer. */
