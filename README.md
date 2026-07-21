@@ -102,13 +102,11 @@ forwarded onto every outbound link by `components/LinkEnhancer.tsx`.
 
 ## Telegram join notifications
 
-`app/api/telegram-webhook/route.ts` does two things on every real channel
-join: sends you a Telegram message naming the new member and which campaign
-invite link (from `TELEGRAM_CAMPAIGNS` in `lib/config.ts`) they used, and
-fires a Meta CAPI `Subscribe` event tagged with that campaign — reusing the
-same `NEXT_PUBLIC_META_PIXEL_ID` / `META_CAPI_ACCESS_TOKEN` as `/api/capi`,
-no new Meta credentials needed. No effect on the site or visitor experience
-either way.
+`app/api/telegram-webhook/route.ts` sends you a Telegram message every time
+someone joins the channel, naming which campaign invite link (from
+`TELEGRAM_CAMPAIGNS` in `lib/config.ts`) they used. It's a standalone
+notification tool — no Meta Pixel/CAPI, no effect on the site or visitor
+experience.
 
 **Setup:**
 
@@ -134,9 +132,7 @@ either way.
 
 Note: this can only attribute a join to a **campaign** (which invite link
 was used), not to an individual ad click/browser — Telegram exposes no
-browser-identifying data at join time. The CAPI event sends a hashed
-Telegram user id as `external_id` (Meta rejects events with zero user_data
-as unmatchable), but that id can't be linked to any Facebook ad viewer.
+per-user tracking data at join time.
 
 ## Conversion & compliance notes
 
