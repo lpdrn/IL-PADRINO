@@ -1,11 +1,25 @@
 import { NextRequest, NextResponse } from "next/server";
-import { LINKS, TELEGRAM_CAMPAIGNS } from "@/lib/config";
+import crypto from "crypto";
+import { LINKS, SITE_URL, TELEGRAM_CAMPAIGNS } from "@/lib/config";
 
 /**
- * Telegram Bot webhook — sends YOU a Telegram notification every time
- * someone joins the channel, naming which campaign invite link (if any)
- * they used. Pure notification tool: no Meta Pixel/CAPI, no effect on the
- * site or visitor experience.
+ * Telegram Bot webhook — on every real channel join:
+ *   1. Sends YOU a Telegram notification naming the new member and which
+ *      campaign invite link (if any) they used.
+ *   2. Fires a Meta Conversions API "Subscribe" event tagged with that
+ *      campaign, reusing the same Graph API call as app/api/capi/route.ts
+ *      and the same env vars — no new Meta credentials needed.
+ *
+ * Limitation (same as the rest of the Telegram integration): this can only
+ * attribute a join to a CAMPAIGN (which invite link was used), not to an
+ * individual ad click/browser — Telegram exposes no browser-identifying data
+ * at join time. The CAPI event's user_data carries a hashed Telegram user id
+ * (required so Meta doesn't reject the event as unmatchable) but that id
+ * can't be linked to any Facebook ad viewer. It still gives Meta a real
+ * "this campaign produces joins" signal, beyond the click-only
+ * CompleteRegistration event fired from the landing page.
+ *
+ * No effect on the site or visitor experience either way.
  *
  * Setup (see README):
  *   1. Create a bot via @BotFather (/newbot), copy its token.
@@ -22,10 +36,14 @@ import { LINKS, TELEGRAM_CAMPAIGNS } from "@/lib/config";
  *        -d "allowed_updates=[\"chat_member\"]"
  *
  * Env vars required: TELEGRAM_BOT_TOKEN, TELEGRAM_WEBHOOK_SECRET,
- * TELEGRAM_NOTIFY_CHAT_ID.
+ * TELEGRAM_NOTIFY_CHAT_ID. For the CAPI "Subscribe" event, also (already set
+ * for /api/capi): NEXT_PUBLIC_META_PIXEL_ID, META_CAPI_ACCESS_TOKEN.
  */
 
+const GRAPH_VERSION = "v21.0";
+
 interface TelegramUser {
+  id?: number;
   first_name?: string;
   last_name?: string;
   username?: string;
@@ -67,6 +85,52 @@ async function notify(text: string) {
   return { ok: res.ok, status: res.status };
 }
 
+function sha256(value: string): string {
+  return crypto.createHash("sha256").update(value.trim().toLowerCase()).digest("hex");
+}
+
+/**
+ * Fires a campaign-tagged "Subscribe" event to Meta CAPI for a real join.
+ * Meta rejects events with zero user_data (treats them as unmatchable), so
+ * this sends the Telegram user's numeric id as a hashed external_id — Meta's
+ * documented pattern for server-side events with no browser identifiers.
+ * It can't match to a specific ad viewer, but satisfies Meta's requirement
+ * and still carries the campaign signal via custom_data.
+ */
+async function sendSubscribeEvent(
+  campaignKey: string | null,
+  telegramUserId?: number,
+) {
+  const pixelId = process.env.NEXT_PUBLIC_META_PIXEL_ID;
+  const accessToken = process.env.META_CAPI_ACCESS_TOKEN;
+  if (!pixelId || !accessToken) return { skipped: true };
+  if (!telegramUserId) return { skipped: true, reason: "no user id" };
+
+  const body = {
+    data: [
+      {
+        event_name: "Subscribe",
+        event_time: Math.floor(Date.now() / 1000),
+        action_source: "system_generated",
+        event_source_url: SITE_URL,
+        user_data: { external_id: sha256(String(telegramUserId)) },
+        custom_data: { content_name: campaignKey ?? "unknown" },
+      },
+    ],
+    access_token: accessToken,
+  };
+
+  const res = await fetch(
+    `https://graph.facebook.com/${GRAPH_VERSION}/${pixelId}/events`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    },
+  );
+  return { ok: res.ok, status: res.status };
+}
+
 export async function POST(req: NextRequest) {
   const secret = req.headers.get("x-telegram-bot-api-secret-token");
   if (!secret || secret !== process.env.TELEGRAM_WEBHOOK_SECRET) {
@@ -105,9 +169,12 @@ export async function POST(req: NextRequest) {
   ];
   if (campaignKey) lines.push(`الحملة: <b>${escapeHtml(campaignKey)}</b>`);
 
-  const result = await notify(lines.join("\n"));
+  const [notified, capi] = await Promise.all([
+    notify(lines.join("\n")),
+    sendSubscribeEvent(campaignKey, user?.id),
+  ]);
 
-  return NextResponse.json({ ok: true, campaignKey, notified: result });
+  return NextResponse.json({ ok: true, campaignKey, notified, capi });
 }
 
 /** Telegram may probe with GET while you're setting things up. */
