@@ -100,6 +100,40 @@ Variables — `.env.local` is never uploaded there.
 Incoming Meta campaign params (`fbclid`, `utm_*`, sub-ids) are already
 forwarded onto every outbound link by `components/LinkEnhancer.tsx`.
 
+## Telegram join notifications
+
+`app/api/telegram-webhook/route.ts` sends you a Telegram message every time
+someone joins the channel, naming which campaign invite link (from
+`TELEGRAM_CAMPAIGNS` in `lib/config.ts`) they used. It's a standalone
+notification tool — no Meta Pixel/CAPI, no effect on the site or visitor
+experience.
+
+**Setup:**
+
+1. Create a bot with [@BotFather](https://t.me/BotFather) (`/newbot`), copy
+   its token.
+2. Add the bot as an **admin** of the channel — required for it to receive
+   join/leave updates at all (Channel → Administrators → Add Admin).
+3. Find the chat id that should receive notifications (usually your own DM
+   with the bot): send the bot any message, then open
+   `https://api.telegram.org/bot<TOKEN>/getUpdates` in a browser and read
+   `"chat":{"id": ...}` from the response.
+4. Set `TELEGRAM_BOT_TOKEN`, `TELEGRAM_WEBHOOK_SECRET` (invent your own), and
+   `TELEGRAM_NOTIFY_CHAT_ID` in Vercel → Project → Settings → Environment
+   Variables (and `.env.local` for local testing).
+5. Register the webhook so Telegram calls this route (`allowed_updates` must
+   include `chat_member`, otherwise Telegram won't send join events at all):
+   ```bash
+   curl "https://api.telegram.org/bot<TOKEN>/setWebhook" \
+     -d "url=https://www.pronosociety.com/api/telegram-webhook" \
+     -d "secret_token=<TELEGRAM_WEBHOOK_SECRET>" \
+     -d "allowed_updates=[\"chat_member\"]"
+   ```
+
+Note: this can only attribute a join to a **campaign** (which invite link
+was used), not to an individual ad click/browser — Telegram exposes no
+per-user tracking data at join time.
+
 ## Conversion & compliance notes
 
 - One primary CTA (Telegram-blue, with the Telegram glyph) repeated across the
