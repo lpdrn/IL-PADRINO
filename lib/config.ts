@@ -45,6 +45,8 @@ export const TELEGRAM_CAMPAIGNS: Record<string, string> = {
   "ti18-36tp1": "https://t.me/+L5kSoxYe48I4Y2I0",
   "si18-36tp1": "https://t.me/+Dp1mF1uscvwyZWRk",
   "si18-36p1": "https://t.me/+T-cD9XijEb5iNTQ0",
+  "si18-44p1": "https://t.me/+f-xY1M8WZDdhOTJk",
+  "si18-44ap1": "https://t.me/+MpS8d6sEFJBhNGNk",
 };
 
 export const BRAND = {
