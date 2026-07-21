@@ -21,7 +21,10 @@ export const LINKS = {
 
 /**
  * Per-campaign Telegram invite links, so each ad campaign's joins show up
- * separately in Telegram's channel stats.
+ * separately in Telegram's channel stats. Platform-agnostic — a key can be
+ * any ad, on any platform (Instagram, Facebook, TikTok, …); nothing here
+ * restricts a key to one network. Naming keys after the platform (ig1, fb1)
+ * is just a convenience, not a technical constraint.
  *
  * Usage: create a new invite link in Telegram (القناة ← إدارة ← روابط الدعوة)،
  * add a short key for it below, then use https://<site>/?ch=<key> as that
@@ -33,7 +36,7 @@ export const LINKS = {
  *   ig1: "https://t.me/+AbCdEfGh123",
  */
 export const TELEGRAM_CAMPAIGNS: Record<string, string> = {
-  /** Instagram-only test campaign. */
+  /** First test campaign — currently running on Instagram. */
   ig1: "https://t.me/+AFMe1DZLmnwwODA8",
 };
 
