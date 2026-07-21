@@ -37,7 +37,7 @@ export const LINKS = {
  */
 export const TELEGRAM_CAMPAIGNS: Record<string, string> = {
   /** First test campaign — currently running on Instagram. */
-  ig1: "https://t.me/+AFMe1DZLmnwwODA8",
+  sip1: "https://t.me/+fCxuPg-ik-llNjc0",
 };
 
 export const BRAND = {
