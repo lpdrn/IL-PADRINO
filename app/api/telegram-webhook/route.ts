@@ -44,14 +44,26 @@ function escapeHtml(text: string): string {
     .replace(/>/g, "&gt;");
 }
 
-/** Maps an invite link back to its campaign key, or null if not recognized. */
-function findCampaignKey(inviteLink?: string): string | null {
-  if (!inviteLink) return null;
-  if (inviteLink === LINKS.telegram) return "الرابط الافتراضي";
+/**
+ * Telegram can echo the same invite link back with minor cosmetic
+ * differences (the telegram.me alias domain, stray whitespace, http vs
+ * https) — normalize before comparing so those don't register as
+ * "unrecognized".
+ */
+function normalizeInviteLink(link: string): string {
+  return link
+    .trim()
+    .replace(/^http:\/\//i, "https://")
+    .replace(/:\/\/telegram\.me\//i, "://t.me/");
+}
+
+/** Maps an invite link back to its campaign key, or null if not found. */
+function findCampaignKey(inviteLink: string): string | null {
+  const normalized = normalizeInviteLink(inviteLink);
   const entry = Object.entries(TELEGRAM_CAMPAIGNS).find(
-    ([, link]) => link === inviteLink,
+    ([, link]) => normalizeInviteLink(link) === normalized,
   );
-  return entry ? entry[0] : "رابط غير مسجّل بالكود";
+  return entry ? entry[0] : null;
 }
 
 async function notify(text: string) {
@@ -97,17 +109,31 @@ export async function POST(req: NextRequest) {
   );
   const username = user?.username ? `@${escapeHtml(user.username)}` : "بدون username";
   const inviteLink = chatMember.invite_link?.invite_link;
-  const campaignKey = findCampaignKey(inviteLink);
 
   const lines = [
     "🎉 <b>عضو جديد انضم للقناة</b>",
     `الاسم: ${name} (${username})`,
   ];
-  if (campaignKey) lines.push(`الحملة: <b>${escapeHtml(campaignKey)}</b>`);
+
+  let campaignKey: string | null = null;
+  if (inviteLink) {
+    if (normalizeInviteLink(inviteLink) === normalizeInviteLink(LINKS.telegram)) {
+      campaignKey = "الرابط الافتراضي";
+      lines.push(`الحملة: <b>${campaignKey}</b>`);
+    } else {
+      campaignKey = findCampaignKey(inviteLink);
+      if (campaignKey) {
+        lines.push(`الحملة: <b>${escapeHtml(campaignKey)}</b>`);
+      } else {
+        lines.push("الحملة: <b>رابط غير مسجّل بالكود</b>");
+        lines.push(`الرابط: <code>${escapeHtml(inviteLink)}</code>`);
+      }
+    }
+  }
 
   const result = await notify(lines.join("\n"));
 
-  return NextResponse.json({ ok: true, campaignKey, notified: result });
+  return NextResponse.json({ ok: true, campaignKey, inviteLink, notified: result });
 }
 
 /** Telegram may probe with GET while you're setting things up. */
