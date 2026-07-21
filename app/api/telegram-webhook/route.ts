@@ -66,6 +66,16 @@ function findCampaignKey(inviteLink: string): string | null {
   return entry ? entry[0] : null;
 }
 
+/**
+ * Telegram auto-detects "://" as a URL and can visually shorten the display
+ * text for a recognized link (even inside <code>), so a raw invite link
+ * shown for debugging can render truncated with "…" in the actual chat.
+ * A zero-width space breaks the pattern so it renders as plain flat text.
+ */
+function deLinkify(url: string): string {
+  return url.replace("://", ":/​/");
+}
+
 async function notify(text: string) {
   const token = process.env.TELEGRAM_BOT_TOKEN;
   const chatId = process.env.TELEGRAM_NOTIFY_CHAT_ID;
@@ -126,7 +136,13 @@ export async function POST(req: NextRequest) {
         lines.push(`الحملة: <b>${escapeHtml(campaignKey)}</b>`);
       } else {
         lines.push("الحملة: <b>رابط غير مسجّل بالكود</b>");
-        lines.push(`الرابط: <code>${escapeHtml(inviteLink)}</code>`);
+        lines.push(`الرابط: <code>${deLinkify(escapeHtml(inviteLink))}</code>`);
+        // Log the raw value so a mismatch can be diagnosed later from Vercel's
+        // Runtime Logs — the notification text alone isn't enough evidence.
+        console.log(
+          "telegram-webhook: unrecognized invite link",
+          JSON.stringify({ raw: inviteLink, normalized: normalizeInviteLink(inviteLink) }),
+        );
       }
     }
   }
