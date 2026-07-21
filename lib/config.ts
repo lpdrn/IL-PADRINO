@@ -6,8 +6,8 @@
 
 export const PROMO_CODE = "SBA3" as const;
 
-/** Canonical production origin, no trailing slash. Swap on domain launch (see CLAUDE.md). */
-export const SITE_URL = "https://il-padrino.com" as const;
+/** Canonical production origin, no trailing slash (apex 308-redirects to www). */
+export const SITE_URL = "https://www.pronosociety.com" as const;
 
 export const LINKS = {
   /** Primary registration link (carries the promo sub-id in its tracking tag).

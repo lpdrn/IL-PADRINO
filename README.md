@@ -50,12 +50,12 @@ npm run typecheck  # tsc --noEmit
   config in `app/layout.tsx`. The primary CTA uses the `.foil-telegram`
   (Telegram-blue) surface; gold `.foil` remains for the crest and coins.
 
-## Before going live
+## Production domain
 
-1. Replace the placeholder domain `https://il-padrino.com` in `app/layout.tsx`
-   (`metadataBase`), `app/robots.ts`, `app/sitemap.ts`, and
-   `components/StructuredData.tsx` with the real production domain.
-2. Set up the Meta Pixel + Conversions API (see below).
+The canonical origin is `SITE_URL` in `lib/config.ts` (currently
+`https://www.pronosociety.com` — the apex 308-redirects to www). Layout
+`metadataBase`, `robots.ts`, `sitemap.ts`, StructuredData, and the CAPI
+webhook all read from it, so a future domain change is a one-line edit.
 
 ## Meta Pixel + Conversions API (CAPI)
 

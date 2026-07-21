@@ -25,6 +25,6 @@ SBA3) happen downstream inside the channel. See `README.md` for the full overvie
 - **ESLint:** `eslint-config-next@15` has no `exports` map, so the flat config uses **`FlatCompat`** (`@eslint/eslintrc`) in `eslint.config.mjs`. Don't switch to the Next-16 `eslint-config-next/core-web-vitals` subpath imports — they won't resolve on 15. Lint script is `eslint .`.
 - Always run `npm run lint` and `npm run typecheck` after changes; both are currently clean.
 
-## Before deploy
+## Deploy notes
 
-Replace the placeholder domain `https://il-padrino.com` (layout metadataBase, robots.ts, sitemap.ts, StructuredData.tsx). Wire Meta Pixel/CAPI — outbound param passthrough is already handled by `LinkEnhancer`.
+The canonical origin is `SITE_URL` in `lib/config.ts` (`https://www.pronosociety.com`); layout metadataBase, robots.ts, sitemap.ts, StructuredData, and the CAPI webhook all read from it. Meta Pixel/CAPI activate via env vars (see README); outbound param passthrough is handled by `LinkEnhancer`.
