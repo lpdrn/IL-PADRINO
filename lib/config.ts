@@ -14,8 +14,9 @@ export const LINKS = {
    *  Not linked directly on the page — the funnel routes through Telegram first. */
   register:
     "https://1xlite-48727.bar/en/registration?tag=d_3622779m_97c_SBA3&type=fast&bonus=SPORT&currency=MAD",
-  /** Official Telegram channel — the primary funnel entry point. */
-  telegram: "https://telegram.me/lpdrn",
+  /** Telegram invite link created specifically for this site — the primary
+   *  funnel entry point (joins via this link are attributable to the site). */
+  telegram: "https://t.me/+JTOdPxmvj6g0MzNk",
 } as const;
 
 export const BRAND = {
