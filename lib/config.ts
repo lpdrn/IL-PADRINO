@@ -36,16 +36,15 @@ export const LINKS = {
  *   ig1: "https://t.me/+AbCdEfGh123",
  */
 export const TELEGRAM_CAMPAIGNS: Record<string, string> = {
-  /** First test campaign — currently running on Instagram. */
   sip1: "https://t.me/+fCxuPg-ik-llNjc0",
   sifp1: "https://t.me/+3RJgZMzaKkozMjk0",
   sfp1: "https://t.me/+S6HXxNkyYto3Mzlk",
   tip1: "https://t.me/+X-vTRqhvy1w2NzM0",
   tfp1: "https://t.me/+ftQuJrE5Lnw1YTE0",
-  ti18-36p1: "https://t.me/+pfc_cP4KPCRiZTE0",
-  ti18-36tp1: "https://t.me/+L5kSoxYe48I4Y2I0",
-  si18-36tp1: "https://t.me/+Dp1mF1uscvwyZWRk",
-  si18-36p1: "https://t.me/+T-cD9XijEb5iNTQ0",
+  "ti18-36p1": "https://t.me/+pfc_cP4KPCRiZTE0",
+  "ti18-36tp1": "https://t.me/+L5kSoxYe48I4Y2I0",
+  "si18-36tp1": "https://t.me/+Dp1mF1uscvwyZWRk",
+  "si18-36p1": "https://t.me/+T-cD9XijEb5iNTQ0",
 };
 
 export const BRAND = {
