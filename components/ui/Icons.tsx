@@ -37,25 +37,6 @@ export function Spade(props: IconProps) {
   );
 }
 
-export function Apple(props: IconProps) {
-  return (
-    <Svg fill="currentColor" {...props}>
-      <path d="M17.05 12.04c-.03-2.6 2.12-3.85 2.22-3.91-1.21-1.77-3.1-2.01-3.77-2.04-1.6-.16-3.13.94-3.94.94-.81 0-1.72-.92-3.05-.9-1.57.03-3.02.91-3.83 2.31-1.63 2.83-.42 7.02 1.17 9.32.78 1.13 1.7 2.39 2.92 2.34 1.17-.05 1.61-.76 3.03-.76 1.41 0 1.81.76 3.05.73 1.26-.02 2.06-1.15 2.83-2.28.89-1.31 1.26-2.58 1.28-2.64-.03-.01-2.46-.94-2.49-3.74Z M14.6 4.6c.65-.79 1.09-1.88.97-2.98-.93.04-2.06.62-2.73 1.41-.6.7-1.13 1.82-.99 2.89 1.04.08 2.1-.53 2.75-1.32Z" />
-    </Svg>
-  );
-}
-
-export function Android(props: IconProps) {
-  return (
-    <Svg fill="currentColor" fillRule="evenodd" clipRule="evenodd" {...props}>
-      <path d="M15.63 4.13l1.03-1.57a.33.33 0 0 0-.55-.36l-1.06 1.6A6.5 6.5 0 0 0 12 3c-1.05 0-2.04.24-2.96.74L7.98 2.2a.33.33 0 0 0-.55.36l1.02 1.57A6.15 6.15 0 0 0 5.35 9.2h13.3a6.15 6.15 0 0 0-3.02-5.07ZM9.4 7.05a.83.83 0 1 1 0-1.66.83.83 0 0 1 0 1.66Zm5.2 0a.83.83 0 1 1 0-1.66.83.83 0 0 1 0 1.66Z" />
-      <path d="M5.35 10.35v6.75c0 .63.5 1.13 1.13 1.13h.82v2.42a1.18 1.18 0 0 0 2.35 0v-2.42h4.7v2.42a1.18 1.18 0 0 0 2.35 0v-2.42h.82c.62 0 1.13-.5 1.13-1.13v-6.75H5.35Z" />
-      <rect x="2.15" y="10.2" width="2.2" height="6.5" rx="1.1" />
-      <rect x="19.65" y="10.2" width="2.2" height="6.5" rx="1.1" />
-    </Svg>
-  );
-}
-
 export function Telegram(props: IconProps) {
   return (
     <Svg fill="currentColor" {...props}>
@@ -127,15 +108,6 @@ export function Users(props: IconProps) {
       <path d="M3.5 19.5a5.5 5.5 0 0 1 11 0" />
       <path d="M16 6a3 3 0 0 1 0 5.6" />
       <path d="M17 14.6a5.5 5.5 0 0 1 3.5 4.9" />
-    </Svg>
-  );
-}
-
-export function Copy(props: IconProps) {
-  return (
-    <Svg {...stroke} {...props}>
-      <rect x="9" y="9" width="11" height="11" rx="2" />
-      <path d="M6 15H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v1" />
     </Svg>
   );
 }

@@ -1,15 +1,7 @@
 import type { ComponentType, SVGProps } from "react";
 import { TRUST } from "@/lib/content";
 import { Reveal } from "./ui/Reveal";
-import {
-  Bolt,
-  ShieldCheck,
-  Headset,
-  Gift,
-  Lock,
-  Users,
-  Check,
-} from "./ui/Icons";
+import { Bolt, ShieldCheck, Headset, Gift, Lock, Users } from "./ui/Icons";
 
 const ICONS: ComponentType<SVGProps<SVGSVGElement>>[] = [
   Bolt,
@@ -21,8 +13,9 @@ const ICONS: ComponentType<SVGProps<SVGSVGElement>>[] = [
 ];
 
 /**
- * Answers the three cold-traffic fears — is it safe, will they pay me, is it
- * legit — with restrained, believable coin badges (no fake testimonials).
+ * Answers why the channel is worth joining — predictions, prizes, exclusive
+ * content, community — with restrained, believable coin badges (no fake
+ * testimonials).
  */
 export function Trust() {
   return (
@@ -50,12 +43,6 @@ export function Trust() {
                   <p className="text-[12px] leading-snug text-muted">
                     {point.desc}
                   </p>
-                  {"payout" in point && point.payout && (
-                    <span className="mt-2 inline-flex items-center gap-1 text-[11px] font-medium text-success">
-                      <Check className="size-3.5" />
-                      <span>مضمون</span>
-                    </span>
-                  )}
                 </li>
               );
             })}

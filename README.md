@@ -1,8 +1,9 @@
 # IL PADRINO — Landing Page
 
-Production landing page for the **IL PADRINO** affiliate betting brand. Arabic
-(RTL), luxury black & gold, mobile-first, engineered to maximize qualified
-First-Time Depositors (FTD) from Meta Ads traffic.
+Production landing page for the **IL PADRINO** betting-predictions Telegram
+channel. Arabic (RTL), luxury black & gold, mobile-first. The funnel is
+**channel-first**: every primary CTA joins the Telegram channel, and
+registration/deposit (with promo code `SBA3`) happens downstream from there.
 
 ## Stack
 
@@ -30,16 +31,18 @@ npm run typecheck  # tsc --noEmit
 | Design tokens & signature styles | `app/globals.css` |
 | Fonts, SEO metadata, RTL shell | `app/layout.tsx` |
 | Page composition | `app/page.tsx` |
-| Section components | `components/` |
-| Reusable primitives (CTA, CountUp, Reveal, Icons) | `components/ui/` |
+| Section components (Hero, StepsBand, Trust, Faq, …) | `components/` |
+| Reusable primitives (CtaButton, CountUp, Reveal, Icons) | `components/ui/` |
 
 ## Editing content
 
-- **Promo code / links:** edit `lib/config.ts` (`PROMO_CODE`, `LINKS`). The
-  registration link already carries the `SBA3` sub-id in its path.
-- **Copy:** edit `lib/content.ts`. The primary CTA string is fixed by the brief.
+- **Links / promo code:** edit `lib/config.ts` (`PROMO_CODE`, `LINKS`).
+  `LINKS.telegram` is the primary CTA target; `LINKS.register` is kept for
+  reference/downstream use but is not linked directly on the page.
+- **Copy:** edit `lib/content.ts` — all Arabic strings live there.
 - **Colors / fonts:** edit the `@theme` block in `app/globals.css` and the font
-  config in `app/layout.tsx`.
+  config in `app/layout.tsx`. The primary CTA uses the `.foil-telegram`
+  (Telegram-blue) surface; gold `.foil` remains for the crest and coins.
 
 ## Before going live
 
@@ -53,7 +56,7 @@ npm run typecheck  # tsc --noEmit
 Two pieces, both already built — activate by setting env vars.
 
 **1. Client-side Pixel** (`components/MetaPixel.tsx`) — fires `PageView` on
-load and `Lead` when any register/app/Telegram button is tapped. No-op until
+load and `CompleteRegistration` when the Telegram CTA is tapped. No-op until
 you set:
 
 ```
@@ -93,9 +96,8 @@ forwarded onto every outbound link by `components/LinkEnhancer.tsx`.
 
 ## Conversion & compliance notes
 
-- Single primary CTA (gold foil) repeated across the page + a sticky mobile bar.
-  App downloads are Tier-2, Telegram is Tier-3 — none competes with registration.
-- App buttons are OS-detected (Android/iPhone surfaced first for the visitor's device).
-- Copy-to-clipboard has an in-app-webview fallback (Meta traffic runs inside the
-  FB/IG browser).
-- 18+ / responsible-gambling messaging is present in the top bar and footer.
+- One primary CTA (Telegram-blue, with the Telegram glyph) repeated across the
+  page + a sticky mobile bar — a single action, no competing buttons.
+- The page funnels 100% into the Telegram channel; registration links, promo
+  code walkthroughs, and app downloads are handled inside the channel.
+- 18+ / responsible-gambling messaging is present in the footer.

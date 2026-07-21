@@ -3,12 +3,13 @@ import { CtaButton } from "./ui/CtaButton";
 import { Reveal } from "./ui/Reveal";
 
 /**
- * Shows how short the path to a withdrawal is (3-step timeline) then repeats
- * the single primary CTA — reinforcing speed and one consistent action.
+ * Shows how short the path to the bonus is (join → register → deposit →
+ * collect) then repeats the single primary CTA — reinforcing speed and one
+ * consistent action.
  */
-export function RegistrationBand() {
+export function StepsBand() {
   return (
-    <section id="register" className="section border-y border-line bg-panel/40">
+    <section id="steps" className="section border-y border-line bg-panel/40">
       <div className="shell text-center">
         <Reveal>
           <h2 className="mb-7 font-display text-[1.5rem] text-ivory">
@@ -38,9 +39,7 @@ export function RegistrationBand() {
           </ol>
 
           <CtaButton className="mx-auto max-w-[24rem]">{CTA.primary}</CtaButton>
-          <p className="mt-3 text-[13px] text-muted">
-            {CTA.registerReassurance}
-          </p>
+          <p className="mt-3 text-[13px] text-muted">{CTA.joinReassurance}</p>
         </Reveal>
       </div>
     </section>

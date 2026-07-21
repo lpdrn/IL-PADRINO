@@ -4,9 +4,9 @@ import { useEffect } from "react";
 
 /**
  * Forwards incoming Meta campaign parameters (fbclid, utm_*, sub-ids, …) from
- * the current URL onto every outbound registration/app link marked with
- * `data-append-params`, so first-time-deposit conversions attribute back to the
- * ad set. Progressive enhancement: links work fine without this.
+ * the current URL onto every outbound CTA link marked with
+ * `data-append-params`, so downstream conversions attribute back to the ad
+ * set. Progressive enhancement: links work fine without this.
  */
 export function LinkEnhancer() {
   useEffect(() => {

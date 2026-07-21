@@ -10,14 +10,11 @@ export const PROMO_CODE = "SBA3" as const;
 export const SITE_URL = "https://il-padrino.com" as const;
 
 export const LINKS = {
-  /** Primary registration link (carries the promo sub-id in its tracking tag). */
+  /** Primary registration link (carries the promo sub-id in its tracking tag).
+   *  Not linked directly on the page — the funnel routes through Telegram first. */
   register:
     "https://1xlite-48727.bar/en/registration?tag=d_3622779m_97c_SBA3&type=fast&bonus=SPORT&currency=MAD",
-  /** Android APK / affiliate tracking link. */
-  android: "https://reffpa.com/L?tag=d_3622779m_70865c_&site=3622779&ad=70865",
-  /** iOS install-walkthrough video (Telegram post), not a TestFlight link. */
-  iphone: "https://telegram.me/lpdrn/8285",
-  /** Official Telegram channel. */
+  /** Official Telegram channel — the primary funnel entry point. */
   telegram: "https://telegram.me/lpdrn",
 } as const;
 
@@ -26,5 +23,3 @@ export const BRAND = {
   /** Latin wordmark shown in the header/footer. */
   wordmark: "IL PADRINO",
 } as const;
-
-export type SiteLinks = typeof LINKS;

@@ -8,7 +8,7 @@ import { CtaButton } from "./ui/CtaButton";
 /**
  * Persistent bottom CTA. Appears once the hero CTA scrolls out of view and
  * hides again over the footer so it never covers the 18+ / legal text.
- * Single action (register), safe-area aware.
+ * Single action (join Telegram), safe-area aware.
  */
 export function StickyCta() {
   const [pastHero, setPastHero] = useState(false);

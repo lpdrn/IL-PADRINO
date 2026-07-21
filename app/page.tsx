@@ -1,8 +1,6 @@
 import { TopBar } from "@/components/TopBar";
 import { Hero } from "@/components/Hero";
-import { PromoCode } from "@/components/PromoCode";
-import { RegistrationBand } from "@/components/RegistrationBand";
-import { AppButtons } from "@/components/AppButtons";
+import { StepsBand } from "@/components/StepsBand";
 import { Trust } from "@/components/Trust";
 import { Faq } from "@/components/Faq";
 import { FinalCta } from "@/components/FinalCta";
@@ -19,9 +17,7 @@ export default function Home() {
       <TopBar />
       <main>
         <Hero />
-        <AppButtons />
-        <PromoCode />
-        <RegistrationBand />
+        <StepsBand />
         <Trust />
         <Faq />
         <FinalCta />

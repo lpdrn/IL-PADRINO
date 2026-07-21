@@ -7,10 +7,10 @@ import { PROMO_CODE } from "@/lib/config";
 /**
  * Meta (Facebook/Instagram) Pixel — the client half of FTD tracking.
  * No-op unless NEXT_PUBLIC_META_PIXEL_ID is set, so the build stays clean
- * until a real pixel id is provided. Fires PageView on load and a custom
- * "RegistrationClick" when any outbound register/app link is tapped, giving
- * the ad delivery a mid-funnel signal. The deposit/Purchase event is a
- * server-side Conversions API / affiliate-postback concern (see README).
+ * until a real pixel id is provided. Fires PageView on load and
+ * "CompleteRegistration" when the Telegram CTA is tapped, giving the ad
+ * delivery a mid-funnel signal. The deposit/Purchase event is a server-side
+ * Conversions API / affiliate-postback concern (see README).
  */
 export function MetaPixel() {
   const id = process.env.NEXT_PUBLIC_META_PIXEL_ID;
@@ -23,7 +23,7 @@ export function MetaPixel() {
       if (!link) return;
       const fbq = (window as unknown as { fbq?: (...args: unknown[]) => void })
         .fbq;
-      fbq?.("track", "Lead", { content_name: PROMO_CODE });
+      fbq?.("track", "CompleteRegistration", { content_name: PROMO_CODE });
     };
     document.addEventListener("click", onClick);
     return () => document.removeEventListener("click", onClick);
