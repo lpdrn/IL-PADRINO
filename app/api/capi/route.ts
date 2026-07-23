@@ -51,7 +51,10 @@ async function pingTelegram(text: string) {
 }
 
 function buildEventPayload(params: URLSearchParams, req: NextRequest) {
-  const event = params.get("event") || "Lead";
+  // Defensive: keep only the clean event name even if a stray "?…" survived
+  // parsing, so Meta logs the standard CompleteRegistration/Purchase event
+  // rather than a custom one like "CompleteRegistration?reg=true".
+  const event = (params.get("event") || "Lead").split("?")[0].trim();
   const value = params.get("value");
   const currency = params.get("currency") || "MAD";
   const fbclid = params.get("fbclid");
@@ -102,7 +105,7 @@ async function handle(req: NextRequest, params: URLSearchParams, method: string)
   // wrong-secret ones, which is exactly the case we're blind to otherwise.
   // A random probe with no params won't ping.
   const looksLikePostback = params.has("secret") || params.has("event");
-  const eventName = params.get("event") || "(بدون حدث)";
+  const eventName = (params.get("event") || "(بدون حدث)").split("?")[0].trim();
   const value = params.get("value");
   const currency = params.get("currency") || "MAD";
   const amount = value ? ` — القيمة: ${value} ${currency}` : "";
@@ -156,18 +159,29 @@ async function handle(req: NextRequest, params: URLSearchParams, method: string)
 }
 
 /**
- * Some affiliate postback templates (1xPartners does this) append extra
- * macros after the registered URL using a bare "?" instead of "&" — e.g.
- * "...&event=Purchase&currency=MAD?value={sumdep}&ftd={ftd}". Standard URL
- * parsing only treats the first "?" as the query delimiter, so everything
- * after a second "?" gets silently swallowed into the previous param's
- * value instead of becoming its own param. Treat every "?" after the first
- * as "&" so those trailing macros parse correctly regardless.
+ * 1xPartners appends an extra "?<name>={macro}" after the configured
+ * postback URL — e.g. "...&event=CompleteRegistration?reg={reg}" or
+ * "...&currency=MAD?value={sumdep}&ftd={ftd}". Standard URL parsing treats
+ * only the first "?" as the query delimiter, so that trailing pair gets
+ * swallowed into the previous param's value (mangling the event name, or
+ * dropping the deposit value).
+ *
+ * Crucially, by the time this reaches us the stray "?" and its following
+ * "=" arrive PERCENT-ENCODED (%3F / %3D) — the runtime normalizes req.url —
+ * so replacing only a literal "?" isn't enough. Decode those two delimiters
+ * first, then fold every secondary "?" into "&", so the appended pair parses
+ * as its own param. (The real postback params here never legitimately
+ * contain an encoded "?" or "=", so decoding them globally is safe.)
  */
 function robustSearchParams(rawUrl: string): URLSearchParams {
   const qIndex = rawUrl.indexOf("?");
   if (qIndex === -1) return new URLSearchParams();
-  return new URLSearchParams(rawUrl.slice(qIndex + 1).replace(/\?/g, "&"));
+  const qs = rawUrl
+    .slice(qIndex + 1)
+    .replace(/%3F/gi, "?")
+    .replace(/%3D/gi, "=")
+    .replace(/\?/g, "&");
+  return new URLSearchParams(qs);
 }
 
 export async function GET(req: NextRequest) {
