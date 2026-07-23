@@ -33,6 +33,23 @@ import { SITE_URL } from "@/lib/config";
 
 const GRAPH_VERSION = "v21.0";
 
+/**
+ * Pings YOUR Telegram (reusing the notification bot) whenever a postback
+ * arrives, so a real 1xbet postback is confirmed instantly without opening
+ * Vercel logs. Plain text (no parse_mode) so unexpected macro values can't
+ * break formatting. No-op if the bot env vars aren't set.
+ */
+async function pingTelegram(text: string) {
+  const token = process.env.TELEGRAM_BOT_TOKEN;
+  const chatId = process.env.TELEGRAM_NOTIFY_CHAT_ID;
+  if (!token || !chatId) return;
+  await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ chat_id: chatId, text }),
+  }).catch(() => {});
+}
+
 function buildEventPayload(params: URLSearchParams, req: NextRequest) {
   const event = params.get("event") || "Lead";
   const value = params.get("value");
@@ -80,7 +97,22 @@ async function handle(req: NextRequest, params: URLSearchParams, method: string)
     JSON.stringify({ method, secretOk, params: seen, rawUrl: req.url }),
   );
 
+  // Ping Telegram for anything that looks like a real postback attempt (has a
+  // secret or event param), so 1xbet postbacks are confirmed live — including
+  // wrong-secret ones, which is exactly the case we're blind to otherwise.
+  // A random probe with no params won't ping.
+  const looksLikePostback = params.has("secret") || params.has("event");
+  const eventName = params.get("event") || "(بدون حدث)";
+  const value = params.get("value");
+  const currency = params.get("currency") || "MAD";
+  const amount = value ? ` — القيمة: ${value} ${currency}` : "";
+
   if (!secretOk) {
+    if (looksLikePostback) {
+      await pingTelegram(
+        `⚠️ وصل postback لكن secret غير صحيح\nالحدث: ${eventName}${amount}\nتأكد أن CAPI_WEBHOOK_SECRET في 1xPartners = القيمة في Vercel.`,
+      );
+    }
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
 
@@ -108,7 +140,14 @@ async function handle(req: NextRequest, params: URLSearchParams, method: string)
       body: JSON.stringify(body),
     },
   );
-  const metaJson = await metaRes.json();
+  const metaJson = (await metaRes.json()) as { events_received?: number };
+
+  const metaSummary = metaRes.ok
+    ? `Meta: ✅ استقبل ${metaJson.events_received ?? 1}`
+    : `Meta: ⚠️ ${JSON.stringify(metaJson).slice(0, 200)}`;
+  await pingTelegram(
+    `✅ وصل postback (secret صحيح)\nالحدث: ${eventName}${amount}\n${metaSummary}`,
+  );
 
   return NextResponse.json(
     { forwarded: true, meta: metaJson },
