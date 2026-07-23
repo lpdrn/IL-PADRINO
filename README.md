@@ -62,8 +62,8 @@ webhook all read from it, so a future domain change is a one-line edit.
 Two pieces, both already built — activate by setting env vars.
 
 **1. Client-side Pixel** (`components/MetaPixel.tsx`) — fires `PageView` on
-load and `Lead` when the Telegram CTA is tapped (a click is only interest,
-not a real registration — see below). No-op until you set:
+load and `CompleteRegistration` when the Telegram CTA is tapped. No-op until
+you set:
 
 ```
 NEXT_PUBLIC_META_PIXEL_ID=<your pixel id>
@@ -74,10 +74,10 @@ Find it in Meta Events Manager → Data Sources → Pixels.
 **2. Server-side CAPI webhook** (`app/api/capi/route.ts`) — because the real
 conversion (registration/deposit) happens on the affiliate's site, not this
 domain, it can only reach Meta if the affiliate network calls this endpoint as
-a **postback URL** when a referred user converts. This is the only source of
-the real `CompleteRegistration` and `Purchase` events — the client-side Pixel
-deliberately does not fire `CompleteRegistration` on its own, to avoid
-double-counting every button click as a registration. Set:
+a **postback URL** when a referred user converts. It fires the real
+`CompleteRegistration` and `Purchase` events server-side (the client-side
+Pixel also fires `CompleteRegistration` on click, so that event mixes
+click-intent with real registrations). Set:
 
 ```
 META_CAPI_ACCESS_TOKEN=<generate in Events Manager → your pixel → Settings → Conversions API>

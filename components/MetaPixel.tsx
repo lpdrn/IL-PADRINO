@@ -7,12 +7,12 @@ import { PROMO_CODE } from "@/lib/config";
 /**
  * Meta (Facebook/Instagram) Pixel — the client half of funnel tracking.
  * No-op unless NEXT_PUBLIC_META_PIXEL_ID is set, so the build stays clean
- * until a real pixel id is provided. Fires PageView on load and "Lead" when
- * the Telegram CTA is tapped — a click is only interest, not a real
- * registration. The real CompleteRegistration and Purchase events come
- * server-side from the 1xbet affiliate postback via /api/capi (see README);
- * firing CompleteRegistration here too would double-count it against real
- * registrations and corrupt that event as an ad optimization target.
+ * until a real pixel id is provided. Fires PageView on load and
+ * "CompleteRegistration" when the Telegram CTA is tapped, giving the ad
+ * delivery a client-side conversion signal. (Note: the 1xbet affiliate
+ * postback also fires CompleteRegistration server-side via /api/capi, so
+ * this event can carry both click-intent and real registrations — dedupe
+ * on event_id later if precise counts become important.)
  */
 export function MetaPixel() {
   const id = process.env.NEXT_PUBLIC_META_PIXEL_ID;
@@ -25,7 +25,7 @@ export function MetaPixel() {
       if (!link) return;
       const fbq = (window as unknown as { fbq?: (...args: unknown[]) => void })
         .fbq;
-      fbq?.("track", "Lead", { content_name: PROMO_CODE });
+      fbq?.("track", "CompleteRegistration", { content_name: PROMO_CODE });
     };
     document.addEventListener("click", onClick);
     return () => document.removeEventListener("click", onClick);
