@@ -1,11 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
-import { LINKS, TELEGRAM_CAMPAIGNS } from "@/lib/config";
 
 /**
  * Telegram Bot webhook — sends YOU a Telegram notification every time
- * someone joins the channel, naming which campaign invite link (if any)
- * they used. Pure notification tool: no Meta Pixel/CAPI, no effect on the
- * site or visitor experience.
+ * someone joins the channel (name + username). Pure notification tool: no
+ * Meta Pixel/CAPI, no effect on the site or visitor experience.
+ *
+ * Per-campaign attribution is intentionally NOT done here anymore: matching
+ * the reported invite link against a config list proved unreliable, and
+ * campaign performance is now tracked via the 1xPartners Sub ID in the
+ * conversion funnel instead.
  *
  * Setup (see README):
  *   1. Create a bot via @BotFather (/newbot), copy its token.
@@ -34,7 +37,6 @@ interface TelegramUser {
 interface ChatMemberUpdate {
   old_chat_member?: { status?: string };
   new_chat_member?: { status?: string; user?: TelegramUser };
-  invite_link?: { invite_link?: string };
 }
 
 function escapeHtml(text: string): string {
@@ -42,28 +44,6 @@ function escapeHtml(text: string): string {
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;");
-}
-
-/**
- * Telegram can echo the same invite link back with minor cosmetic
- * differences (the telegram.me alias domain, stray whitespace, http vs
- * https) — normalize before comparing so those don't register as
- * "unrecognized".
- */
-function normalizeInviteLink(link: string): string {
-  return link
-    .trim()
-    .replace(/^http:\/\//i, "https://")
-    .replace(/:\/\/telegram\.me\//i, "://t.me/");
-}
-
-/** Maps an invite link back to its campaign key, or null if not found. */
-function findCampaignKey(inviteLink: string): string | null {
-  const normalized = normalizeInviteLink(inviteLink);
-  const entry = Object.entries(TELEGRAM_CAMPAIGNS).find(
-    ([, link]) => normalizeInviteLink(link) === normalized,
-  );
-  return entry ? entry[0] : null;
 }
 
 async function notify(text: string) {
@@ -108,47 +88,12 @@ export async function POST(req: NextRequest) {
     [user?.first_name, user?.last_name].filter(Boolean).join(" ") || "مستخدم",
   );
   const username = user?.username ? `@${escapeHtml(user.username)}` : "بدون username";
-  const inviteLink = chatMember.invite_link?.invite_link;
 
-  const lines = [
-    "🎉 <b>عضو جديد انضم للقناة</b>",
-    `الاسم: ${name} (${username})`,
-  ];
+  const result = await notify(
+    `🎉 <b>عضو جديد انضم للقناة</b>\nالاسم: ${name} (${username})`,
+  );
 
-  let campaignKey: string | null = null;
-  if (!inviteLink) {
-    lines.push("الحملة: <b>بدون رابط دعوة</b>");
-  } else if (normalizeInviteLink(inviteLink) === normalizeInviteLink(LINKS.telegram)) {
-    campaignKey = "الرابط الافتراضي";
-    lines.push(`الحملة: <b>${campaignKey}</b>`);
-  } else {
-    campaignKey = findCampaignKey(inviteLink);
-    if (campaignKey) {
-      lines.push(`الحملة: <b>${escapeHtml(campaignKey)}</b>`);
-    } else {
-      // Unrecognized: show a short plain-text fingerprint of the link
-      // (last 8 chars + length). It's not a URL, so Telegram won't shorten
-      // it in the message the way it truncates a detected link — this lets
-      // the link be compared against the روابط الدعوة list by eye.
-      const normalized = normalizeInviteLink(inviteLink);
-      lines.push("الحملة: <b>غير معروفة ⚠️</b>");
-      lines.push(`معرّف الرابط: <code>${escapeHtml(inviteLink.slice(-8))}</code> (طول ${inviteLink.length})`);
-      // Full raw value goes to Vercel Runtime Logs for definitive diagnosis.
-      console.log(
-        "telegram-webhook: unrecognized invite link",
-        JSON.stringify({
-          raw: inviteLink,
-          normalized,
-          length: inviteLink.length,
-          last8: inviteLink.slice(-8),
-        }),
-      );
-    }
-  }
-
-  const result = await notify(lines.join("\n"));
-
-  return NextResponse.json({ ok: true, campaignKey, inviteLink, notified: result });
+  return NextResponse.json({ ok: true, notified: result });
 }
 
 /** Telegram may probe with GET while you're setting things up. */
