@@ -26,12 +26,12 @@ export const LINKS = {
  * conversion through it fires the CompleteRegistration/Purchase postback to
  * `/api/capi`.
  *
- * The sub-id slot sits at the end of `tag=…97c_` (empty here, valid without
- * JS). `components/LinkEnhancer.tsx` appends the visitor's `fbclid` there so
- * it round-trips back via the postback's `{{click_id}}` macro → `/api/capi`
- * builds `fbc` → Meta attributes the conversion to the exact ad. To wire the
- * round-trip, enable `{{click_id}}` on both postbacks and append
- * `&fbclid={{click_id}}` to their URLs.
+ * `components/LinkEnhancer.tsx` sets the visitor's `fbclid` as reffpa's own
+ * `&click_id=` query param (the field the tracker echoes back). It round-trips
+ * via the postback's `{{click_id}}` macro → `/api/capi` builds `fbc` → Meta
+ * attributes the conversion to the exact ad. To wire the round-trip, just
+ * enable the `{{click_id}}` checkbox on both postbacks (the route reads the
+ * `click_id` param directly — no rename needed).
  */
 export const REGISTER_LINK =
   "https://reffpa.com/L?tag=d_5859750m_97c_&pb=8ba89642f63a4214bfab6c95ff3b8f8a" as const;

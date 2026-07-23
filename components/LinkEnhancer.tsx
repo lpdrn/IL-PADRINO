@@ -13,12 +13,13 @@ import { LINKS, TELEGRAM_CAMPAIGNS } from "@/lib/config";
  *    query params, and a decorated t.me link comes back from the chat_member
  *    webhook as a non-matching invite_link.
  *
- * 2. Direct-registration CTAs (`data-register-link`): append the visitor's
- *    fbclid into the reffpa tracking tag's sub-id slot (`tag=…97c_<fbclid>`).
- *    That sub-id round-trips back via the postback's {{click_id}} macro →
- *    /api/capi builds `fbc` → Meta attributes the real registration/deposit to
- *    the exact ad. Unlike Telegram, 1xbet DOES consume this, and the click
- *    goes straight from our domain (where fbclid is live) to the platform.
+ * 2. Direct-registration CTAs (`data-register-link`): set the visitor's
+ *    fbclid as the reffpa `click_id` query param (the tracker's own field —
+ *    its "Example tracking URL" ends with `&click_id={click_id}`). That value
+ *    round-trips back via the postback's {{click_id}} macro → /api/capi builds
+ *    `fbc` → Meta attributes the real registration/deposit to the exact ad.
+ *    Unlike Telegram, 1xbet DOES consume this, and the click goes straight
+ *    from our domain (where fbclid is live) to the platform.
  */
 export function LinkEnhancer() {
   useEffect(() => {
@@ -35,7 +36,8 @@ export function LinkEnhancer() {
         });
     }
 
-    // 2. Direct-registration fbclid pass-through
+    // 2. Direct-registration fbclid pass-through — set reffpa's own click_id
+    //    field (the tracker echoes it back via the postback's {{click_id}}).
     const fbclid = search.get("fbclid");
     if (fbclid) {
       document
@@ -43,13 +45,8 @@ export function LinkEnhancer() {
         .forEach((a) => {
           try {
             const url = new URL(a.href);
-            const tag = url.searchParams.get("tag");
-            // Only append when the sub-id slot is empty (tag ends with "_"),
-            // so re-runs and pre-filled tags aren't double-appended.
-            if (tag && tag.endsWith("_")) {
-              url.searchParams.set("tag", tag + fbclid);
-              a.href = url.toString();
-            }
+            url.searchParams.set("click_id", fbclid);
+            a.href = url.toString();
           } catch {
             /* leave untouched on a malformed href */
           }
