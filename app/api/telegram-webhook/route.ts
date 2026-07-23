@@ -116,11 +116,21 @@ export async function POST(req: NextRequest) {
     } else {
       campaignKey = findCampaignKey(inviteLink);
       if (!campaignKey) {
+        const normalized = normalizeInviteLink(inviteLink);
         // Log the raw value so a mismatch can be diagnosed later from
-        // Vercel's Runtime Logs.
+        // Vercel's Runtime Logs. Vercel's log viewer truncates long string
+        // values for display, which can hide exactly the characters that
+        // matter — "last8" is short enough to survive that and lets a
+        // mismatch be confirmed/ruled out against a known campaign link's
+        // suffix even when "raw" gets cut off on screen.
         console.log(
           "telegram-webhook: unrecognized invite link",
-          JSON.stringify({ raw: inviteLink, normalized: normalizeInviteLink(inviteLink) }),
+          JSON.stringify({
+            raw: inviteLink,
+            normalized,
+            length: inviteLink.length,
+            last8: inviteLink.slice(-8),
+          }),
         );
       }
     }
