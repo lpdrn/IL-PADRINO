@@ -101,8 +101,23 @@ async function handle(req: NextRequest, params: URLSearchParams) {
   );
 }
 
+/**
+ * Some affiliate postback templates (1xPartners does this) append extra
+ * macros after the registered URL using a bare "?" instead of "&" — e.g.
+ * "...&event=Purchase&currency=MAD?value={sumdep}&ftd={ftd}". Standard URL
+ * parsing only treats the first "?" as the query delimiter, so everything
+ * after a second "?" gets silently swallowed into the previous param's
+ * value instead of becoming its own param. Treat every "?" after the first
+ * as "&" so those trailing macros parse correctly regardless.
+ */
+function robustSearchParams(rawUrl: string): URLSearchParams {
+  const qIndex = rawUrl.indexOf("?");
+  if (qIndex === -1) return new URLSearchParams();
+  return new URLSearchParams(rawUrl.slice(qIndex + 1).replace(/\?/g, "&"));
+}
+
 export async function GET(req: NextRequest) {
-  return handle(req, req.nextUrl.searchParams);
+  return handle(req, robustSearchParams(req.url));
 }
 
 export async function POST(req: NextRequest) {
@@ -112,7 +127,7 @@ export async function POST(req: NextRequest) {
     const json = (await req.json().catch(() => ({}))) as Record<string, string>;
     params = new URLSearchParams(json);
   } else {
-    params = req.nextUrl.searchParams;
+    params = robustSearchParams(req.url);
   }
   return handle(req, params);
 }
