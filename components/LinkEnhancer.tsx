@@ -4,29 +4,57 @@ import { useEffect } from "react";
 import { LINKS, TELEGRAM_CAMPAIGNS } from "@/lib/config";
 
 /**
- * Per-campaign Telegram swap on the outbound CTA links marked with
- * `data-append-params` (links work fine without JS): if the page was opened
- * with ?ch=<key> and the key exists in TELEGRAM_CAMPAIGNS, every Telegram
- * CTA points to that campaign's invite link instead, so joins are
- * attributable per campaign in Telegram's stats. Only whitelisted keys are
- * honored.
+ * Two client-side enhancements (both no-ops without JS — links work as-is):
  *
- * Deliberately does NOT append fbclid, utm_ params, or anything else onto
- * the link: Telegram doesn't consume them for anything, and a decorated
- * `t.me/+HASH?...` URL can come back from Telegram's chat_member webhook as
- * a non-matching invite_link, breaking campaign attribution entirely.
+ * 1. Telegram CTAs (`data-append-params`): per-campaign swap. If the page was
+ *    opened with ?ch=<key> and the key exists in TELEGRAM_CAMPAIGNS, point
+ *    every Telegram CTA at that campaign's invite link. Only whitelisted keys
+ *    are honored. Deliberately appends NOTHING else — Telegram doesn't consume
+ *    query params, and a decorated t.me link comes back from the chat_member
+ *    webhook as a non-matching invite_link.
+ *
+ * 2. Direct-registration CTAs (`data-register-link`): append the visitor's
+ *    fbclid into the reffpa tracking tag's sub-id slot (`tag=…97c_<fbclid>`).
+ *    That sub-id round-trips back via the postback's {{click_id}} macro →
+ *    /api/capi builds `fbc` → Meta attributes the real registration/deposit to
+ *    the exact ad. Unlike Telegram, 1xbet DOES consume this, and the click
+ *    goes straight from our domain (where fbclid is live) to the platform.
  */
 export function LinkEnhancer() {
   useEffect(() => {
-    const campaignKey = new URLSearchParams(window.location.search).get("ch");
-    const campaignLink = campaignKey ? TELEGRAM_CAMPAIGNS[campaignKey] : undefined;
-    if (!campaignLink) return;
+    const search = new URLSearchParams(window.location.search);
 
-    const anchors =
-      document.querySelectorAll<HTMLAnchorElement>("a[data-append-params]");
-    anchors.forEach((a) => {
-      if (a.href === LINKS.telegram) a.href = campaignLink;
-    });
+    // 1. Telegram per-campaign swap
+    const campaignKey = search.get("ch");
+    const campaignLink = campaignKey ? TELEGRAM_CAMPAIGNS[campaignKey] : undefined;
+    if (campaignLink) {
+      document
+        .querySelectorAll<HTMLAnchorElement>("a[data-append-params]")
+        .forEach((a) => {
+          if (a.href === LINKS.telegram) a.href = campaignLink;
+        });
+    }
+
+    // 2. Direct-registration fbclid pass-through
+    const fbclid = search.get("fbclid");
+    if (fbclid) {
+      document
+        .querySelectorAll<HTMLAnchorElement>("a[data-register-link]")
+        .forEach((a) => {
+          try {
+            const url = new URL(a.href);
+            const tag = url.searchParams.get("tag");
+            // Only append when the sub-id slot is empty (tag ends with "_"),
+            // so re-runs and pre-filled tags aren't double-appended.
+            if (tag && tag.endsWith("_")) {
+              url.searchParams.set("tag", tag + fbclid);
+              a.href = url.toString();
+            }
+          } catch {
+            /* leave untouched on a malformed href */
+          }
+        });
+    }
   }, []);
 
   return null;

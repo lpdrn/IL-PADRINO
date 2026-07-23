@@ -57,7 +57,9 @@ function buildEventPayload(params: URLSearchParams, req: NextRequest) {
   const event = (params.get("event") || "Lead").split("?")[0].trim();
   const value = params.get("value");
   const currency = params.get("currency") || "MAD";
-  const fbclid = params.get("fbclid");
+  // Accept either name — the affiliate postback may echo the sub-id back as
+  // `fbclid` or as the raw `click_id` macro.
+  const fbclid = params.get("fbclid") || params.get("click_id");
   const fbp = params.get("fbp");
 
   const ip =
@@ -109,6 +111,12 @@ async function handle(req: NextRequest, params: URLSearchParams, method: string)
   const value = params.get("value");
   const currency = params.get("currency") || "MAD";
   const amount = value ? ` — القيمة: ${value} ${currency}` : "";
+  // Whether the ad click id round-tripped back (accepted as fbclid, or the
+  // raw click_id macro) — tells you if Meta can attribute this to the ad.
+  const clickId = params.get("fbclid") || params.get("click_id");
+  const attribution = clickId
+    ? "🎯 مع fbclid — Meta تنسبه للإعلان"
+    : "⚪ بدون fbclid — نسبة ضعيفة";
 
   if (!secretOk) {
     if (looksLikePostback) {
@@ -149,7 +157,7 @@ async function handle(req: NextRequest, params: URLSearchParams, method: string)
     ? `Meta: ✅ استقبل ${metaJson.events_received ?? 1}`
     : `Meta: ⚠️ ${JSON.stringify(metaJson).slice(0, 200)}`;
   await pingTelegram(
-    `✅ وصل postback (secret صحيح)\nالحدث: ${eventName}${amount}\n${metaSummary}`,
+    `✅ وصل postback (secret صحيح)\nالحدث: ${eventName}${amount}\n${attribution}\n${metaSummary}`,
   );
 
   return NextResponse.json(

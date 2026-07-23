@@ -23,6 +23,8 @@ export const CTA = {
   primary: "انضم الآن واحصل على 2000 درهم",
   sticky: "انضم واحصل على 2000 درهم",
   joinReassurance: "انضم مجاناً خلال ثوانٍ",
+  /** Secondary action — direct registration on the platform (skips Telegram). */
+  registerDirect: "أو سجّل مباشرة على المنصة",
 } as const;
 
 export const CLOSING = {

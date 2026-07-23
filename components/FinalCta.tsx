@@ -1,5 +1,6 @@
 import { CLOSING, CTA } from "@/lib/content";
 import { CtaButton } from "./ui/CtaButton";
+import { SecondaryCta } from "./ui/SecondaryCta";
 import { Reveal } from "./ui/Reveal";
 
 /** Closing conversion beat right before the footer. */
@@ -15,6 +16,9 @@ export function FinalCta() {
             {CLOSING.sub}
           </p>
           <CtaButton className="mx-auto max-w-[24rem]">{CTA.primary}</CtaButton>
+          <div className="mt-3">
+            <SecondaryCta />
+          </div>
         </Reveal>
       </div>
     </section>

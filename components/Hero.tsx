@@ -1,5 +1,6 @@
 import { HERO, BONUS, CTA } from "@/lib/content";
 import { CtaButton } from "./ui/CtaButton";
+import { SecondaryCta } from "./ui/SecondaryCta";
 import { CountUp } from "./ui/CountUp";
 import { Spade, Check } from "./ui/Icons";
 
@@ -56,6 +57,7 @@ export function Hero() {
         </p>
 
         <CtaButton className="max-w-[24rem]">{CTA.primary}</CtaButton>
+        <SecondaryCta className="mt-3" />
         {/* Sentinel: sticky CTA appears once this scrolls out of view */}
         <span id="hero-cta-sentinel" aria-hidden="true" className="block h-px w-full" />
 
