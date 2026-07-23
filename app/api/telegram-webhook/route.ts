@@ -104,39 +104,49 @@ export async function POST(req: NextRequest) {
   }
 
   const user = chatMember.new_chat_member?.user;
+  const name = escapeHtml(
+    [user?.first_name, user?.last_name].filter(Boolean).join(" ") || "مستخدم",
+  );
   const username = user?.username ? `@${escapeHtml(user.username)}` : "بدون username";
   const inviteLink = chatMember.invite_link?.invite_link;
 
-  // Campaign detection still runs (useful for logging/diagnostics) but is no
-  // longer shown in the notification text — only the username is.
+  const lines = [
+    "🎉 <b>عضو جديد انضم للقناة</b>",
+    `الاسم: ${name} (${username})`,
+  ];
+
   let campaignKey: string | null = null;
-  if (inviteLink) {
-    if (normalizeInviteLink(inviteLink) === normalizeInviteLink(LINKS.telegram)) {
-      campaignKey = "الرابط الافتراضي";
+  if (!inviteLink) {
+    lines.push("الحملة: <b>بدون رابط دعوة</b>");
+  } else if (normalizeInviteLink(inviteLink) === normalizeInviteLink(LINKS.telegram)) {
+    campaignKey = "الرابط الافتراضي";
+    lines.push(`الحملة: <b>${campaignKey}</b>`);
+  } else {
+    campaignKey = findCampaignKey(inviteLink);
+    if (campaignKey) {
+      lines.push(`الحملة: <b>${escapeHtml(campaignKey)}</b>`);
     } else {
-      campaignKey = findCampaignKey(inviteLink);
-      if (!campaignKey) {
-        const normalized = normalizeInviteLink(inviteLink);
-        // Log the raw value so a mismatch can be diagnosed later from
-        // Vercel's Runtime Logs. Vercel's log viewer truncates long string
-        // values for display, which can hide exactly the characters that
-        // matter — "last8" is short enough to survive that and lets a
-        // mismatch be confirmed/ruled out against a known campaign link's
-        // suffix even when "raw" gets cut off on screen.
-        console.log(
-          "telegram-webhook: unrecognized invite link",
-          JSON.stringify({
-            raw: inviteLink,
-            normalized,
-            length: inviteLink.length,
-            last8: inviteLink.slice(-8),
-          }),
-        );
-      }
+      // Unrecognized: show a short plain-text fingerprint of the link
+      // (last 8 chars + length). It's not a URL, so Telegram won't shorten
+      // it in the message the way it truncates a detected link — this lets
+      // the link be compared against the روابط الدعوة list by eye.
+      const normalized = normalizeInviteLink(inviteLink);
+      lines.push("الحملة: <b>غير معروفة ⚠️</b>");
+      lines.push(`معرّف الرابط: <code>${escapeHtml(inviteLink.slice(-8))}</code> (طول ${inviteLink.length})`);
+      // Full raw value goes to Vercel Runtime Logs for definitive diagnosis.
+      console.log(
+        "telegram-webhook: unrecognized invite link",
+        JSON.stringify({
+          raw: inviteLink,
+          normalized,
+          length: inviteLink.length,
+          last8: inviteLink.slice(-8),
+        }),
+      );
     }
   }
 
-  const result = await notify(`🎉 <b>عضو جديد انضم للقناة</b>\n${username}`);
+  const result = await notify(lines.join("\n"));
 
   return NextResponse.json({ ok: true, campaignKey, inviteLink, notified: result });
 }
