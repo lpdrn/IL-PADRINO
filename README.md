@@ -62,8 +62,8 @@ webhook all read from it, so a future domain change is a one-line edit.
 Two pieces, both already built — activate by setting env vars.
 
 **1. Client-side Pixel** (`components/MetaPixel.tsx`) — fires `PageView` on
-load and `CompleteRegistration` when the Telegram CTA is tapped. No-op until
-you set:
+load and `Lead` when the Telegram CTA is tapped (a click is only interest,
+not a real registration — see below). No-op until you set:
 
 ```
 NEXT_PUBLIC_META_PIXEL_ID=<your pixel id>
@@ -74,7 +74,10 @@ Find it in Meta Events Manager → Data Sources → Pixels.
 **2. Server-side CAPI webhook** (`app/api/capi/route.ts`) — because the real
 conversion (registration/deposit) happens on the affiliate's site, not this
 domain, it can only reach Meta if the affiliate network calls this endpoint as
-a **postback URL** when a referred user converts. Set:
+a **postback URL** when a referred user converts. This is the only source of
+the real `CompleteRegistration` and `Purchase` events — the client-side Pixel
+deliberately does not fire `CompleteRegistration` on its own, to avoid
+double-counting every button click as a registration. Set:
 
 ```
 META_CAPI_ACCESS_TOKEN=<generate in Events Manager → your pixel → Settings → Conversions API>
@@ -89,9 +92,13 @@ https://<your-domain>/api/capi?secret=<CAPI_WEBHOOK_SECRET>&event=CompleteRegist
 https://<your-domain>/api/capi?secret=<CAPI_WEBHOOK_SECRET>&event=Purchase&value={payout}&currency=MAD
 ```
 
-Optionally append `&fbclid={click_id}` if the network can echo back whatever
-`LinkEnhancer.tsx` forwarded onto the outbound link, and
-`&test_event_code=...` (from Meta's Test Events tool) while verifying.
+Optionally append `&test_event_code=...` (from Meta's Test Events tool)
+while verifying. Note: `LinkEnhancer.tsx` deliberately does not forward
+`fbclid`/`utm_*` onto the outbound Telegram link (a decorated `t.me` link
+can come back from Telegram's webhook as a non-matching invite link), so
+there's currently no click-id continuity between the ad click and the
+affiliate conversion — these events reach Meta with weak match quality
+rather than being attributed to a specific ad.
 
 **Locally:** copy `.env.example` to `.env.local` and fill in the three values.
 **On Vercel:** set the same three under Project → Settings → Environment
