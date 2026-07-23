@@ -115,7 +115,7 @@ async function handle(req: NextRequest, params: URLSearchParams, method: string)
   // raw click_id macro) — tells you if Meta can attribute this to the ad.
   const clickId = params.get("fbclid") || params.get("click_id");
   const attribution = clickId
-    ? "🎯 مع fbclid — Meta تنسبه للإعلان"
+    ? `🎯 مع fbclid (${clickId.length} حرف، ينتهي بـ …${clickId.slice(-12)}) — Meta تنسبه للإعلان`
     : "⚪ بدون fbclid — نسبة ضعيفة";
 
   if (!secretOk) {
