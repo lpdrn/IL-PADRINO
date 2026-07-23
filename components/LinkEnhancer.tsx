@@ -38,18 +38,17 @@ export function LinkEnhancer() {
 
     // 2. Direct-registration fbclid pass-through — set reffpa's own click_id
     //    field (the tracker echoes it back via the postback's {{click_id}}).
+    //    Append as a raw string rather than via the URL API, so the existing
+    //    link is preserved verbatim — the URL API would re-encode the landing
+    //    path (r=en/registration → r=en%2Fregistration).
     const fbclid = search.get("fbclid");
     if (fbclid) {
+      const suffix = `click_id=${encodeURIComponent(fbclid)}`;
       document
         .querySelectorAll<HTMLAnchorElement>("a[data-register-link]")
         .forEach((a) => {
-          try {
-            const url = new URL(a.href);
-            url.searchParams.set("click_id", fbclid);
-            a.href = url.toString();
-          } catch {
-            /* leave untouched on a malformed href */
-          }
+          if (a.href.includes("click_id=")) return; // don't double-append
+          a.href += (a.href.includes("?") ? "&" : "?") + suffix;
         });
     }
   }, []);

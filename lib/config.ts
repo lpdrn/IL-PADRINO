@@ -32,9 +32,12 @@ export const LINKS = {
  * attributes the conversion to the exact ad. To wire the round-trip, just
  * enable the `{{click_id}}` checkbox on both postbacks (the route reads the
  * `click_id` param directly — no rename needed).
+ *
+ * `&r=en/registration` is reffpa's landing-page path param — it lands the
+ * visitor straight on the 1xbet registration page instead of the homepage.
  */
 export const REGISTER_LINK =
-  "https://reffpa.com/L?tag=d_5859750m_97c_&pb=8ba89642f63a4214bfab6c95ff3b8f8a" as const;
+  "https://reffpa.com/L?tag=d_5859750m_97c_&pb=8ba89642f63a4214bfab6c95ff3b8f8a&r=en/registration" as const;
 
 /**
  * Per-campaign Telegram invite links, so each ad campaign's joins show up
