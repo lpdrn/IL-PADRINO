@@ -63,9 +63,24 @@ function buildEventPayload(params: URLSearchParams, req: NextRequest) {
   };
 }
 
-async function handle(req: NextRequest, params: URLSearchParams) {
+async function handle(req: NextRequest, params: URLSearchParams, method: string) {
+  // Log EVERY incoming request (before auth) so a real affiliate postback is
+  // always visible in Vercel Runtime Logs — even if the secret is wrong or
+  // the payload is malformed. The secret value itself is redacted; we only
+  // record whether it matched, so we can tell a genuine 1xbet call from a
+  // random probe. This is the primary tool for confirming postbacks fire.
   const secret = params.get("secret");
-  if (!secret || secret !== process.env.CAPI_WEBHOOK_SECRET) {
+  const secretOk = !!secret && secret === process.env.CAPI_WEBHOOK_SECRET;
+  const seen: Record<string, string> = {};
+  params.forEach((value, key) => {
+    seen[key] = key === "secret" ? (secret ? "«provided»" : "«missing»") : value;
+  });
+  console.log(
+    "capi: incoming postback",
+    JSON.stringify({ method, secretOk, params: seen, rawUrl: req.url }),
+  );
+
+  if (!secretOk) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
 
@@ -117,7 +132,7 @@ function robustSearchParams(rawUrl: string): URLSearchParams {
 }
 
 export async function GET(req: NextRequest) {
-  return handle(req, robustSearchParams(req.url));
+  return handle(req, robustSearchParams(req.url), "GET");
 }
 
 export async function POST(req: NextRequest) {
@@ -129,5 +144,5 @@ export async function POST(req: NextRequest) {
   } else {
     params = robustSearchParams(req.url);
   }
-  return handle(req, params);
+  return handle(req, params, "POST");
 }
