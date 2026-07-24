@@ -8,6 +8,7 @@ import { Footer } from "@/components/Footer";
 import { StickyCta } from "@/components/StickyCta";
 import { LinkEnhancer } from "@/components/LinkEnhancer";
 import { MetaPixel } from "@/components/MetaPixel";
+import { TikTokPixel } from "@/components/TikTokPixel";
 import { StructuredData } from "@/components/StructuredData";
 
 export default function Home() {
@@ -26,6 +27,7 @@ export default function Home() {
       <StickyCta />
       <LinkEnhancer />
       <MetaPixel />
+      <TikTokPixel />
     </>
   );
 }
