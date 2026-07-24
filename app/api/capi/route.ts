@@ -2,36 +2,63 @@ import { NextRequest, NextResponse } from "next/server";
 import { SITE_URL } from "@/lib/config";
 
 /**
- * Server-side relay for Meta Conversions API (CAPI).
+ * Server-side relay for affiliate postback → ad-platform conversion APIs
+ * (Meta Conversions API and TikTok Events API).
  *
  * This is the webhook URL you give your affiliate network's "postback URL"
  * setting (one for registration, one for deposit/FTD — see README). The
  * affiliate network calls this when a referred user converts; we forward the
- * event to Meta's Graph API from the server, which is the only way the real
- * deposit event can reach Meta (it happens entirely off this domain).
+ * event to Meta and/or TikTok from the server, which is the only way the real
+ * deposit event can reach them (it happens entirely off this domain).
+ *
+ * The conversion is routed to the platform the click came from, using the
+ * prefix LinkEnhancer put on the click id: `fb_…` → Meta, `tt_…` → TikTok
+ * (a bare value with no prefix is treated as a Meta fbclid for back-compat).
  *
  * Required env vars (set in Vercel → Project → Settings → Environment
  * Variables, not just locally):
- *   NEXT_PUBLIC_META_PIXEL_ID  — same pixel id used by components/MetaPixel.tsx
- *   META_CAPI_ACCESS_TOKEN     — from Meta Events Manager → Conversions API
- *   CAPI_WEBHOOK_SECRET        — a secret string you invent; must match the
- *                                `secret` param the affiliate network sends,
- *                                so random callers can't spam fake events in.
+ *   CAPI_WEBHOOK_SECRET         — a secret string you invent; must match the
+ *                                 `secret` param the affiliate network sends.
+ *   NEXT_PUBLIC_META_PIXEL_ID   — same pixel id used by components/MetaPixel.tsx
+ *   META_CAPI_ACCESS_TOKEN      — from Meta Events Manager → Conversions API
+ *   NEXT_PUBLIC_TIKTOK_PIXEL_ID — same pixel id used by TikTokPixel.tsx
+ *   TIKTOK_EVENTS_API_TOKEN     — from TikTok Events Manager → Events API
  *
  * Query params accepted (GET or POST, same shape):
  *   secret     (required) must equal CAPI_WEBHOOK_SECRET
- *   event      Meta standard event name — "CompleteRegistration" or
- *              "Purchase" are the two you'll actually use. Defaults to "Lead".
+ *   event      standard event name — "CompleteRegistration" or "Purchase".
+ *              Defaults to "Lead". (Mapped to TikTok's names when routed there.)
  *   value      numeric deposit amount (only meaningful for "Purchase")
  *   currency   ISO currency code, e.g. "MAD" (defaults to "MAD")
- *   fbclid     the Meta click id, if the affiliate network can echo back
- *              whatever LinkEnhancer.tsx appended to the outbound link
+ *   click_id   the round-tripped click id (fb_<fbclid> or tt_<ttclid>)
  *   fbp        the _fbp browser cookie value, if available
- *   test_event_code  optional — paste from Meta's "Test Events" tool while
- *                     verifying the integration, omit in production
+ *   test_event_code  optional — paste from the platform's Test Events tool
+ *                     while verifying, omit in production
  */
 
 const GRAPH_VERSION = "v21.0";
+const TIKTOK_EVENTS_URL =
+  "https://business-api.tiktok.com/open_api/v1.3/event/track/";
+
+/** Maps our Meta-style event names to TikTok's standard event names. */
+const TIKTOK_EVENT_MAP: Record<string, string> = {
+  CompleteRegistration: "CompleteRegistration",
+  Purchase: "CompletePayment",
+};
+
+/**
+ * Splits the round-tripped click id into its ad platform and raw id.
+ * LinkEnhancer prefixes it: `fb_<fbclid>` (Meta) or `tt_<ttclid>` (TikTok).
+ * A bare value (no prefix) is treated as a Meta fbclid for back-compat.
+ */
+function parseClickId(
+  raw: string | null,
+): { platform: "meta" | "tiktok"; id: string | null } {
+  if (!raw) return { platform: "meta", id: null };
+  if (raw.startsWith("tt_")) return { platform: "tiktok", id: raw.slice(3) };
+  if (raw.startsWith("fb_")) return { platform: "meta", id: raw.slice(3) };
+  return { platform: "meta", id: raw };
+}
 
 /**
  * Pings YOUR Telegram (reusing the notification bot) whenever a postback
@@ -50,16 +77,17 @@ async function pingTelegram(text: string) {
   }).catch(() => {});
 }
 
-function buildEventPayload(params: URLSearchParams, req: NextRequest) {
+function buildEventPayload(
+  params: URLSearchParams,
+  req: NextRequest,
+  fbclid: string | null,
+) {
   // Defensive: keep only the clean event name even if a stray "?…" survived
   // parsing, so Meta logs the standard CompleteRegistration/Purchase event
   // rather than a custom one like "CompleteRegistration?reg=true".
   const event = (params.get("event") || "Lead").split("?")[0].trim();
   const value = params.get("value");
   const currency = params.get("currency") || "MAD";
-  // Accept either name — the affiliate postback may echo the sub-id back as
-  // `fbclid` or as the raw `click_id` macro.
-  const fbclid = params.get("fbclid") || params.get("click_id");
   const fbp = params.get("fbp");
 
   const ip =
@@ -83,6 +111,64 @@ function buildEventPayload(params: URLSearchParams, req: NextRequest) {
     user_data: userData,
     custom_data: customData,
   };
+}
+
+/**
+ * Forwards the conversion to the TikTok Events API. Mirrors the Meta path but
+ * uses TikTok's payload shape (event_source/event_source_id, user.ttclid) and
+ * event names (Purchase → CompletePayment). Success is code 0 in the body.
+ */
+async function sendTikTok(
+  params: URLSearchParams,
+  req: NextRequest,
+  ttclid: string | null,
+  testEventCode: string | undefined,
+) {
+  const pixelId = process.env.NEXT_PUBLIC_TIKTOK_PIXEL_ID;
+  const token = process.env.TIKTOK_EVENTS_API_TOKEN;
+  if (!pixelId || !token) {
+    return { ok: false, error: "tiktok not configured" };
+  }
+
+  const rawEvent = (params.get("event") || "Lead").split("?")[0].trim();
+  const event = TIKTOK_EVENT_MAP[rawEvent] || rawEvent;
+  const value = params.get("value");
+  const currency = params.get("currency") || "MAD";
+  const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim();
+  const userAgent = req.headers.get("user-agent") || undefined;
+
+  const user: Record<string, string> = {};
+  if (ttclid) user.ttclid = ttclid;
+  if (ip) user.ip = ip;
+  if (userAgent) user.user_agent = userAgent;
+
+  const properties: Record<string, unknown> = { currency };
+  if (value) properties.value = Number(value);
+
+  const body: Record<string, unknown> = {
+    event_source: "web",
+    event_source_id: pixelId,
+    data: [
+      {
+        event,
+        event_time: Math.floor(Date.now() / 1000),
+        user,
+        properties,
+      },
+    ],
+  };
+  if (testEventCode) body.test_event_code = testEventCode;
+
+  const res = await fetch(TIKTOK_EVENTS_URL, {
+    method: "POST",
+    headers: { "Access-Token": token, "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  const json = (await res.json().catch(() => ({}))) as {
+    code?: number;
+    message?: string;
+  };
+  return { ok: res.ok && json.code === 0, status: res.status, json };
 }
 
 async function handle(req: NextRequest, params: URLSearchParams, method: string) {
@@ -111,12 +197,15 @@ async function handle(req: NextRequest, params: URLSearchParams, method: string)
   const value = params.get("value");
   const currency = params.get("currency") || "MAD";
   const amount = value ? ` — القيمة: ${value} ${currency}` : "";
-  // Whether the ad click id round-tripped back (accepted as fbclid, or the
-  // raw click_id macro) — tells you if Meta can attribute this to the ad.
-  const clickId = params.get("fbclid") || params.get("click_id");
-  const attribution = clickId
-    ? `🎯 مع fbclid (${clickId.length} حرف، ينتهي بـ …${clickId.slice(-12)}) — Meta تنسبه للإعلان`
-    : "⚪ بدون fbclid — نسبة ضعيفة";
+  // Which ad platform the click came from, and its raw id — tells you if the
+  // platform can attribute this conversion to a specific ad.
+  const { platform, id } = parseClickId(
+    params.get("fbclid") || params.get("click_id"),
+  );
+  const platformName = platform === "tiktok" ? "TikTok" : "Meta";
+  const attribution = id
+    ? `🎯 ${platformName} (id ينتهي بـ …${id.slice(-12)})`
+    : `⚪ بدون click id — ${platformName} بنسبة ضعيفة`;
 
   if (!secretOk) {
     if (looksLikePostback) {
@@ -127,6 +216,24 @@ async function handle(req: NextRequest, params: URLSearchParams, method: string)
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
 
+  const testEventCode = params.get("test_event_code") || undefined;
+
+  // Route to the ad platform the click came from.
+  if (platform === "tiktok") {
+    const result = await sendTikTok(params, req, id, testEventCode);
+    const summary = result.ok
+      ? "TikTok: ✅ استقبل"
+      : `TikTok: ⚠️ ${JSON.stringify(result.json ?? result).slice(0, 200)}`;
+    await pingTelegram(
+      `✅ وصل postback (secret صحيح)\nالحدث: ${eventName}${amount}\n${attribution}\n${summary}`,
+    );
+    return NextResponse.json(
+      { forwarded: true, platform: "tiktok", tiktok: result },
+      { status: result.ok ? 200 : 502 },
+    );
+  }
+
+  // Meta (default / fb_ prefix / no prefix).
   const pixelId = process.env.NEXT_PUBLIC_META_PIXEL_ID;
   const accessToken = process.env.META_CAPI_ACCESS_TOKEN;
   if (!pixelId || !accessToken) {
@@ -136,9 +243,8 @@ async function handle(req: NextRequest, params: URLSearchParams, method: string)
     );
   }
 
-  const testEventCode = params.get("test_event_code") || undefined;
   const body: Record<string, unknown> = {
-    data: [buildEventPayload(params, req)],
+    data: [buildEventPayload(params, req, id)],
     access_token: accessToken,
   };
   if (testEventCode) body.test_event_code = testEventCode;
